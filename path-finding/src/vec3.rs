@@ -4,8 +4,6 @@ use std::ops::{Add, Div, Mul};
 pub struct Vec3(pub f64, pub f64, pub f64);
 
 impl Vec3 {
-    pub const ZERO: Vec3 = Vec3(0.0, 0.0, 0.0);
-
     pub fn len_2(self) -> f64 {
         self.0.powi(2) + self.1.powi(2) + self.2.powi(2)
     }
@@ -59,13 +57,14 @@ impl Div<f64> for Vec3 {
 #[cfg(test)]
 mod tests {
     use super::Vec3;
+    const ZERO: Vec3 = Vec3(0.0, 0.0, 0.0);
 
     #[test]
     fn len_and_len_2_return_correct_result() {
         assert_eq!(Vec3(1.0, 2.0, -2.0).len(), 3.0);
         assert_eq!(Vec3(2.0, -10.0, 11.0).len(), 15.0);
-        assert_eq!(Vec3::ZERO.len(), 0.0);
-        assert_eq!(Vec3::ZERO.len_2(), 0.0);
+        assert_eq!(ZERO.len(), 0.0);
+        assert_eq!(ZERO.len_2(), 0.0);
         assert_eq!(Vec3(1.0, 2.0, 3.0).len_2(), 14.0);
         assert_eq!(Vec3(-10.0, 10.0, -10.0).len_2(), 300.0);
     }
@@ -76,7 +75,7 @@ mod tests {
             Vec3(2.0, 3.0, 4.0).cross(Vec3(5.0, 6.0, 7.0)),
             Vec3(-3.0, 6.0, -3.0)
         );
-        assert_eq!(Vec3::ZERO.cross(Vec3::ZERO), Vec3::ZERO);
+        assert_eq!(ZERO.cross(ZERO), ZERO);
     }
 
     #[test]
