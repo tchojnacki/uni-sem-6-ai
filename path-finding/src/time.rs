@@ -37,3 +37,22 @@ impl Display for Time {
         write!(f, "{hours:02}:{minutes:02}:00")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::time::Time;
+
+    #[test]
+    fn time_is_parsed_and_formatted_correctly() {
+        let times = ["00:00:00", "00:01:00", "05:12:00", "21:37:00", "23:59:00"];
+        for time in times {
+            assert_eq!(time, Time::from(time).to_string());
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn invalid_time_cant_be_constructed() {
+        _ = Time::from("25:12:00");
+    }
+}

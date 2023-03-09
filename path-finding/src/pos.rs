@@ -81,3 +81,34 @@ impl PosConverter {
         Pos(s1, s2)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Pos, PosConverter, CENTER_RADIUS_KM};
+
+    #[test]
+    fn market_square_is_placed_at_origin() {
+        let pc = PosConverter::initialize();
+        let pos = pc.wgs84_to_pos("51.11038700", "17.03102025");
+        assert!(pos.distance_km(Pos(0.0, 0.0)) < 0.01); // 10m
+    }
+
+    #[test]
+    fn bases_are_orthogonal() {
+        let pc = PosConverter::initialize();
+        assert!(pc.e1.dot(pc.e2) < 0.01);
+    }
+
+    #[test]
+    fn bases_are_perpendicular_to_normal() {
+        let pc = PosConverter::initialize();
+        assert!(pc.normal.dot(pc.e1) < 0.01);
+        assert!(pc.normal.dot(pc.e2) < 0.01);
+    }
+
+    #[test]
+    fn cartesian_coords_are_placed_on_sphere() {
+        let v = PosConverter::wgs84_to_cartesian(51.16042707, 17.12241711);
+        assert!((v.len() - CENTER_RADIUS_KM).abs() < 10.0); // 10 km
+    }
+}
