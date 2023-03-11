@@ -18,22 +18,12 @@ struct Stop<'a> {
 struct Node<'a> {
     stop: Stop<'a>,
     time: Time,
-}
-
-struct Arc {
     line: Option<String>,
-    target: NodeIndex,
-}
-
-struct Edge<'a> {
-    from: NodeIndex,
-    line: Option<&'a str>,
-    to: NodeIndex,
 }
 
 pub struct BusNetwork<'a> {
-    adj_list: Vec<Vec<Arc>>,                      // maps NodeIndex to Arc list
-    nodes: Vec<Node<'a>>,                         // maps NodeIndex to Node
+    adj_list: Vec<Vec<NodeIndex>>, // maps NodeIndex to NodeIndex list
+    nodes: Vec<Node<'a>>,          // maps NodeIndex to Node
     name_lookup: HashMap<String, Vec<NodeIndex>>, // maps node name to time-sorted NodeIndex list
 }
 

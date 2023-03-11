@@ -11,15 +11,15 @@ const CENTER_LON_RAD: f64 = 0.29724750;
 const CENTER_RADIUS_KM: f64 = 6365.343;
 
 /// Represents a location inside a coordinate system which:
-/// - is centered around Wrocław Market Square, which would have Pos(0, 0)
+/// - is centered around Wrocław Market Square, which would have Pos(0.0, 0.0)
 /// - has perpendicular, normalized bases
 /// - measures distances in kilometers
 #[derive(Debug, Clone, Copy)]
-pub struct Pos(f64, f64);
+pub struct Pos(f32, f32);
 
 impl Pos {
     /// Returns the distance between two positions in kilometers.
-    pub fn distance_km(self, other: Self) -> f64 {
+    pub fn distance_km(self, other: Self) -> f32 {
         ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()
     }
 }
@@ -78,7 +78,7 @@ impl PosConverter {
 
         let s1 = self.e1.dot(zp);
         let s2 = self.e2.dot(zp);
-        Pos(s1, s2)
+        Pos(s1 as f32, s2 as f32)
     }
 }
 
