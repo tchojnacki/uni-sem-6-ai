@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 
 /// Represents a timestamp in a day, specified by hours and minutes.
 /// Stores the timestamp as the count of minutes since midnight internally.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Time(u16);
 
 impl From<&str> for Time {
