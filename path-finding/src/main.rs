@@ -14,4 +14,5 @@ fn main() {
     bn.bfs("ZOO", "Gajowa");
 
     println!("Parsing: {}ms", parsing.as_millis());
+    loop {}
 }
