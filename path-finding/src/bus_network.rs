@@ -62,6 +62,7 @@ impl BusNetwork {
         };
 
         let add_edge = |adj_list: &mut AdjList, from: NodeIndex, to: NodeIndex| {
+            assert_ne!(from, to);
             adj_list[from]
                 .binary_search(&to)
                 .map_err(|i| adj_list[from].insert(i, to))
@@ -102,10 +103,14 @@ impl BusNetwork {
         }
 
         for values in name_lookup.values() {
-            for i in 0..values.len() {
-                add_edge(&mut adj_list, values[i], values[(i + 1) % values.len()]);
+            for i in 1..values.len() {
+                assert!(nodes[values[i - 1]].time < nodes[values[i]].time);
+                add_edge(&mut adj_list, values[i - 1], values[i]);
             }
+            add_edge(&mut adj_list, values[values.len() - 1], values[0]);
         }
+
+        assert_eq!(adj_list.len(), nodes.len());
 
         BusNetwork {
             adj_list,

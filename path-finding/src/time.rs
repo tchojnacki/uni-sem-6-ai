@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 
 /// Represents a timestamp in a day, specified by hours and minutes.
 /// Stores the timestamp as the count of minutes since midnight internally.
-#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Time(u16);
 
 impl From<&str> for Time {
@@ -21,9 +21,8 @@ impl From<&str> for Time {
             .and_then(|s| s.parse::<u16>().ok())
             .expect("Invalid minute format.");
 
-        if hours >= 24 || minutes >= 60 {
-            panic!("Time must be earlier than 23:59.");
-        }
+        assert!(hours < 24);
+        assert!(minutes < 60);
 
         Time(hours * 60 + minutes)
     }
