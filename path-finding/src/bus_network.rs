@@ -2,17 +2,17 @@ use crate::{
     file_parser::row_iter,
     path::{Edge, Path},
     pos::Pos,
+    search::State,
     time::Time,
 };
 use smol_str::SmolStr;
 use std::{
-    cmp::Ordering,
     collections::{hash_map::Entry, BinaryHeap, HashMap, VecDeque},
     rc::Rc,
     time::Instant,
 };
 
-type NodeIndex = usize;
+pub type NodeIndex = usize;
 
 #[derive(Debug, PartialEq)]
 pub struct Stop {
@@ -57,24 +57,6 @@ pub struct BusNetwork {
     adj_list: AdjList,                             // maps NodeIndex to NodeIndex list
     nodes: Vec<Node>,                              // maps NodeIndex to Node
     name_lookup: HashMap<Rc<str>, Vec<NodeIndex>>, // maps node name to time-sorted NodeIndex list
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-struct State {
-    cost: u32,
-    node: NodeIndex,
-}
-
-impl Ord for State {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other.cost.cmp(&self.cost)
-    }
-}
-
-impl PartialOrd for State {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
 }
 
 impl BusNetwork {
@@ -204,9 +186,10 @@ impl BusNetwork {
         let mut parents = HashMap::with_capacity(self.nodes.len());
         let mut queue = BinaryHeap::new();
 
-        distances.insert(start, 0);
+        let time_offset = self.nodes[start].time - start_time;
+        distances.insert(start, time_offset);
         queue.push(State {
-            cost: 0,
+            cost: time_offset,
             node: start,
         });
 

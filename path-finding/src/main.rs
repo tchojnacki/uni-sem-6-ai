@@ -6,6 +6,7 @@ mod bus_network;
 mod file_parser;
 mod path;
 mod pos;
+mod search;
 mod string_pool;
 mod time;
 mod vec3;
