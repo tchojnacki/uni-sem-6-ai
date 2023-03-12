@@ -1,9 +1,20 @@
-use std::fmt::{self, Display};
+use std::{
+    fmt::{self, Debug, Display},
+    ops::Sub,
+};
 
 /// Represents a timestamp in a day, specified by hours and minutes.
 /// Stores the timestamp as the count of minutes since midnight internally.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Time(u16);
+
+impl Time {
+    pub fn new(hours: u16, minutes: u16) -> Self {
+        assert!(hours < 24);
+        assert!(minutes < 60);
+        Time(hours * 60 + minutes)
+    }
+}
 
 impl From<&str> for Time {
     /// Converts timestamps formatted as "00:00:00" to Time structs.
@@ -21,19 +32,34 @@ impl From<&str> for Time {
             .and_then(|s| s.parse::<u16>().ok())
             .expect("Invalid minute format.");
 
-        assert!(hours < 24);
-        assert!(minutes < 60);
-
-        Time(hours * 60 + minutes)
+        Time::new(hours, minutes)
     }
 }
 
 impl Display for Time {
     /// String representation of a Time struct.
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let hours = self.0 / 60;
         let minutes = self.0 % 60;
         write!(f, "{hours:02}:{minutes:02}:00")
+    }
+}
+
+impl Debug for Time {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+impl Sub for Time {
+    type Output = u32;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        if self.0 >= rhs.0 {
+            (self.0 - rhs.0) as u32
+        } else {
+            (60 * 24 - self.0 + rhs.0) as u32
+        }
     }
 }
 

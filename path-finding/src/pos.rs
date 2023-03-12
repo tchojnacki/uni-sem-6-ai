@@ -14,7 +14,7 @@ const CENTER_RADIUS_KM: f64 = 6365.343;
 /// - is centered around Wrocław Market Square, which would have Pos(0.0, 0.0)
 /// - has perpendicular, normalized bases
 /// - measures distances in kilometers
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Pos(f32, f32);
 
 impl Pos {
