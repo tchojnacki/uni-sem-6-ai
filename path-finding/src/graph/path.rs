@@ -1,4 +1,4 @@
-use super::edge::Edge;
+use crate::graph::edge::Edge;
 use std::time::Duration;
 
 pub struct Path<'a> {

@@ -1,4 +1,4 @@
-use path_finding::{BusNetwork, Time};
+use path_finding::{BusNetwork, Dijkstra, Time};
 use std::time::Instant;
 
 fn main() {

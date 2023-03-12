@@ -1,4 +1,4 @@
-use super::pos::Pos;
+use crate::structs::Pos;
 use std::rc::Rc;
 
 #[derive(Debug, PartialEq)]

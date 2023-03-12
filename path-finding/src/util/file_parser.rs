@@ -1,6 +1,5 @@
 use crate::{
-    structs::pos::{Pos, PosConverter},
-    structs::time::Time,
+    structs::{Pos, PosConverter, Time},
     util::string_pool::StringPool,
 };
 use smol_str::SmolStr;

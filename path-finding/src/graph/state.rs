@@ -1,4 +1,4 @@
-use super::node::NodeIndex;
+use crate::graph::node::NodeIndex;
 use std::cmp::Ordering;
 
 #[derive(Clone, Copy, PartialEq, Eq)]

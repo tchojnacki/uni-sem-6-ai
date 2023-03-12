@@ -1,7 +1,4 @@
-use crate::{
-    structs::{pos::Pos, stop::Stop},
-    Time,
-};
+use crate::structs::{Pos, Stop, Time};
 use smol_str::SmolStr;
 use std::rc::Rc;
 

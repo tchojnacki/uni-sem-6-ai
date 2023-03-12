@@ -1,15 +1,14 @@
-use super::node::Node;
 use crate::{
-    graph::edge::Edge,
-    graph::path::Path,
-    graph::{node::NodeIndex, search::State},
-    structs::time::Time,
+    graph::{
+        edge::Edge,
+        node::{Node, NodeIndex},
+    },
     util::file_parser::row_iter,
+    Time,
 };
 use std::{
-    collections::{hash_map::Entry, BinaryHeap, HashMap, VecDeque},
+    collections::{hash_map::Entry, HashMap, VecDeque},
     rc::Rc,
-    time::Instant,
 };
 
 type AdjList = Vec<Vec<NodeIndex>>;
@@ -102,7 +101,19 @@ impl BusNetwork {
         }
     }
 
-    fn find_node_index(&self, name: &str, time: Time) -> usize {
+    pub(super) fn order(&self) -> usize {
+        self.nodes.len()
+    }
+
+    pub(super) fn node(&self, index: NodeIndex) -> &Node {
+        &self.nodes[index]
+    }
+
+    pub(super) fn neighbours(&self, of: NodeIndex) -> impl Iterator<Item = NodeIndex> + '_ {
+        self.adj_list[of].iter().copied()
+    }
+
+    pub(super) fn find_node_index(&self, name: &str, time: Time) -> usize {
         let times = &self.name_lookup[name];
         times[match times.binary_search_by_key(&time, |&i| self.nodes[i].time) {
             Ok(i) => i,
@@ -110,11 +121,11 @@ impl BusNetwork {
         } % times.len()]
     }
 
-    fn is_valid_stop(&self, index: NodeIndex, end_name: &str) -> bool {
+    pub(super) fn is_valid_stop(&self, index: NodeIndex, end_name: &str) -> bool {
         self.nodes[index].stop.name == end_name.into() && self.nodes[index].line.is_none()
     }
 
-    fn reconstruct_edges<'s>(
+    pub(super) fn reconstruct_edges<'s>(
         &'s self,
         parents: &HashMap<NodeIndex, NodeIndex>,
         to: NodeIndex,
@@ -136,51 +147,5 @@ impl BusNetwork {
                 }
             })
             .collect::<Vec<_>>()
-    }
-
-    pub fn dijkstra(&self, start_name: &str, start_time: Time, end_name: &str) -> Option<Path> {
-        let instant = Instant::now();
-
-        let start = self.find_node_index(start_name, start_time);
-
-        let mut distances = HashMap::with_capacity(self.nodes.len());
-        let mut parents = HashMap::with_capacity(self.nodes.len());
-        let mut queue = BinaryHeap::new();
-
-        let time_offset = self.nodes[start].time - start_time;
-        distances.insert(start, time_offset);
-        queue.push(State {
-            cost: time_offset,
-            node: start,
-        });
-
-        while let Some(cur) = queue.pop() {
-            if self.is_valid_stop(cur.node, end_name) {
-                let edges = self.reconstruct_edges(&parents, cur.node);
-                return Some(Path {
-                    edges,
-                    cost: cur.cost,
-                    runtime: instant.elapsed(),
-                });
-            } else if Some(&cur.cost) > distances.get(&cur.node) {
-                continue;
-            }
-
-            for &neighbour in &self.adj_list[cur.node] {
-                let cost = self.nodes[neighbour].time - self.nodes[cur.node].time;
-
-                let new_cost = cur.cost + cost;
-                if !distances.contains_key(&neighbour) || new_cost < distances[&neighbour] {
-                    distances.insert(neighbour, new_cost);
-                    parents.insert(neighbour, cur.node);
-                    queue.push(State {
-                        cost: new_cost,
-                        node: neighbour,
-                    });
-                }
-            }
-        }
-
-        None
     }
 }

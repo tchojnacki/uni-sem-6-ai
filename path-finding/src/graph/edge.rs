@@ -1,5 +1,7 @@
-use super::node::Node;
-use crate::structs::{stop::Stop, time::Time};
+use crate::{
+    graph::node::Node,
+    structs::{Stop, Time},
+};
 use smol_str::SmolStr;
 
 #[derive(Debug)]

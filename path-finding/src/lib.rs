@@ -2,5 +2,7 @@ mod graph;
 mod structs;
 mod util;
 
-pub use graph::BusNetwork;
-pub use structs::time::Time;
+pub use self::{
+    graph::{BusNetwork, Dijkstra, Path},
+    structs::Time,
+};
