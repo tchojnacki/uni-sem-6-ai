@@ -1,4 +1,4 @@
-use crate::structs::vec3::Vec3;
+use crate::util::Vec3;
 
 /// Latitude (in radians) of Wrocław Market Square.
 const CENTER_LAT_RAD: f64 = 0.89204444;
@@ -15,7 +15,7 @@ const CENTER_RADIUS_KM: f64 = 6365.343;
 /// - has perpendicular, normalized bases
 /// - measures distances in kilometers
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Pos(f32, f32);
+pub(crate) struct Pos(f32, f32);
 
 impl Pos {
     /// Returns the distance between two positions in kilometers.
@@ -27,7 +27,7 @@ impl Pos {
 /// Helper struct used to convert WSG-84 coordinates to Pos coordinates.
 /// Caches the plane normal and orthogonal bases, because they are the same
 /// for each coordinate point, yet can't be calculated at compile time.
-pub struct PosConverter {
+pub(crate) struct PosConverter {
     normal: Vec3,
     e1: Vec3,
     e2: Vec3,

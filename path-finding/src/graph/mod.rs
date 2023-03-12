@@ -1,4 +1,6 @@
 mod bus_network;
+mod edge;
+mod node;
 mod path;
 mod search;
 

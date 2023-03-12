@@ -2,7 +2,7 @@ use std::ops::{Add, Div, Mul};
 
 /// Three-dimensional vector.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Vec3(pub f64, pub f64, pub f64);
+pub(crate) struct Vec3(pub f64, pub f64, pub f64);
 
 impl Vec3 {
     /// Squared vector length.

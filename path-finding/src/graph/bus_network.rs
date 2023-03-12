@@ -1,55 +1,16 @@
+use super::node::Node;
 use crate::{
-    graph::path::{Edge, Path},
-    graph::search::State,
-    structs::pos::Pos,
+    graph::edge::Edge,
+    graph::path::Path,
+    graph::{node::NodeIndex, search::State},
     structs::time::Time,
     util::file_parser::row_iter,
 };
-use smol_str::SmolStr;
 use std::{
     collections::{hash_map::Entry, BinaryHeap, HashMap, VecDeque},
     rc::Rc,
     time::Instant,
 };
-
-pub type NodeIndex = usize;
-
-#[derive(Debug, PartialEq)]
-pub struct Stop {
-    pub name: Rc<str>,
-    pub pos: Pos,
-}
-
-pub struct Node {
-    stop: Stop,
-    time: Time,
-    line: Option<SmolStr>,
-}
-
-impl Node {
-    fn new(name: &Rc<str>, pos: Pos, time: Time, line: Option<SmolStr>) -> Self {
-        Node {
-            stop: Stop {
-                name: name.clone(),
-                pos,
-            },
-            time,
-            line,
-        }
-    }
-
-    pub fn stop(&self) -> &Stop {
-        &self.stop
-    }
-
-    pub fn time(&self) -> Time {
-        self.time
-    }
-
-    pub fn line(&self) -> Option<&SmolStr> {
-        self.line.as_ref()
-    }
-}
 
 type AdjList = Vec<Vec<NodeIndex>>;
 

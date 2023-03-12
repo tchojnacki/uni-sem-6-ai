@@ -11,7 +11,7 @@ use std::{
 };
 
 /// Holds data stored in a single input file row.
-pub struct RowData {
+pub(crate) struct RowData {
     pub line: SmolStr,
     pub s_time: Time,
     pub e_time: Time,
@@ -59,7 +59,7 @@ fn parse_row(line: &str, sp: &mut StringPool, pc: &PosConverter) -> RowData {
 }
 
 /// Returns an iterator over RowDatas in a given file.
-pub fn row_iter(csv_path: &str) -> impl Iterator<Item = RowData> {
+pub(crate) fn row_iter(csv_path: &str) -> impl Iterator<Item = RowData> {
     let mut sp = StringPool::default();
     let pc = PosConverter::initialize();
     let file = File::open(csv_path).expect("File not found!");

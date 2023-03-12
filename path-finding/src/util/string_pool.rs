@@ -3,7 +3,7 @@ use std::{collections::HashSet, rc::Rc};
 /// Allocates reference counted string slices.
 /// Saves memory when a lot of duplicate owned strings have to be used.
 #[derive(Default)]
-pub struct StringPool {
+pub(crate) struct StringPool {
     cache: HashSet<Rc<str>>,
 }
 

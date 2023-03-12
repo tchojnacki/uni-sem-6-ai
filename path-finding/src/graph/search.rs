@@ -1,9 +1,8 @@
+use super::node::NodeIndex;
 use std::cmp::Ordering;
 
-use crate::graph::bus_network::NodeIndex;
-
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct State {
+pub(super) struct State {
     pub cost: u32,
     pub node: NodeIndex,
 }
