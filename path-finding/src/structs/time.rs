@@ -41,7 +41,7 @@ impl Display for Time {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let hours = self.0 / 60;
         let minutes = self.0 % 60;
-        write!(f, "{hours:02}:{minutes:02}:00")
+        write!(f, "{hours:02}:{minutes:02}")
     }
 }
 
@@ -71,7 +71,7 @@ mod tests {
     fn time_is_parsed_and_formatted_correctly() {
         let times = ["00:00:00", "00:01:00", "05:12:00", "21:37:00", "23:59:00"];
         for time in times {
-            assert_eq!(time, Time::from(time).to_string());
+            assert_eq!(&time[..5], Time::from(time).to_string());
         }
     }
 

@@ -3,6 +3,7 @@ use crate::{
     structs::{Pos, Stop, Time},
 };
 use smol_str::SmolStr;
+use std::fmt::{self, Display};
 
 #[derive(Debug)]
 pub(super) enum Edge<'a> {
@@ -73,6 +74,55 @@ impl Edge<'_> {
                     at_time: start.time,
                 }
             }
+        }
+    }
+}
+
+fn trunc(name: &str) -> String {
+    if name.chars().count() > 25 {
+        name.chars()
+            .take(22)
+            .chain("...".chars())
+            .collect::<String>()
+    } else {
+        format!("{:25}", name)
+    }
+}
+
+impl Display for Edge<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Edge::Wait {
+                at_stop_name,
+                from_time,
+                to_time,
+                ..
+            } => writeln!(f, "🕒 --- {} --> {} {}", from_time, to_time, at_stop_name),
+            Edge::Ride {
+                on_line,
+                from_stop,
+                from_time,
+                to_stop,
+                to_time,
+            } => writeln!(
+                f,
+                "🚌 {:>3} {} {} --> {} {}",
+                on_line,
+                from_time,
+                trunc(&from_stop.name),
+                to_time,
+                trunc(&to_stop.name)
+            ),
+            Edge::Enter {
+                line,
+                at_stop,
+                at_time,
+            } => writeln!(f, "🚉 {:>3} {} {}", line, at_time, at_stop.name),
+            Edge::Leave {
+                line,
+                at_stop,
+                at_time,
+            } => writeln!(f, "🔚 {:>3} {} {}", line, at_time, at_stop.name),
         }
     }
 }
