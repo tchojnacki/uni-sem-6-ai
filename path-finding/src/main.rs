@@ -4,6 +4,7 @@ use std::time::Instant;
 
 mod bus_network;
 mod file_parser;
+mod path;
 mod pos;
 mod string_pool;
 mod time;
@@ -17,7 +18,7 @@ fn main() {
     let path = bn.dijkstra("Kątna", Time::new(12, 34), "Lubiatów").unwrap();
     println!(
         "Found {} min path in {} ms",
-        path.cost(),
-        path.runtime().as_millis()
+        path.cost,
+        path.runtime.as_millis()
     );
 }

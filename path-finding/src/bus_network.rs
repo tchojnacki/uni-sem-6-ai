@@ -1,21 +1,26 @@
-use crate::{file_parser::row_iter, pos::Pos, time::Time};
+use crate::{
+    file_parser::row_iter,
+    path::{Edge, Path},
+    pos::Pos,
+    time::Time,
+};
 use smol_str::SmolStr;
 use std::{
     cmp::Ordering,
     collections::{hash_map::Entry, BinaryHeap, HashMap, VecDeque},
     rc::Rc,
-    time::{Duration, Instant},
+    time::Instant,
 };
 
 type NodeIndex = usize;
 
 #[derive(Debug, PartialEq)]
-struct Stop {
-    name: Rc<str>,
-    pos: Pos,
+pub struct Stop {
+    pub name: Rc<str>,
+    pub pos: Pos,
 }
 
-struct Node {
+pub struct Node {
     stop: Stop,
     time: Time,
     line: Option<SmolStr>,
@@ -32,95 +37,17 @@ impl Node {
             line,
         }
     }
-}
 
-#[derive(Debug)]
-pub enum Edge<'a> {
-    Wait {
-        at_stop: &'a Stop,
-        from_time: Time,
-        to_time: Time,
-    },
-    Ride {
-        on_line: &'a SmolStr,
-        from_stop: &'a Stop,
-        from_time: Time,
-        to_stop: &'a Stop,
-        to_time: Time,
-    },
-    Enter {
-        line: &'a SmolStr,
-        at_stop: &'a Stop,
-        at_time: Time,
-    },
-    Leave {
-        line: &'a SmolStr,
-        at_stop: &'a Stop,
-        at_time: Time,
-    },
-}
-
-impl Edge<'_> {
-    fn from<'a>(start: &'a Node, end: &'a Node) -> Edge<'a> {
-        match (&start.line, &end.line) {
-            (None, None) => {
-                assert_eq!(start.stop.name, end.stop.name);
-                // TODO: Handle walking between same-named stops
-                Edge::Wait {
-                    at_stop: &start.stop,
-                    from_time: start.time,
-                    to_time: end.time,
-                }
-            }
-            (Some(sl), Some(el)) => {
-                assert_eq!(sl, el);
-                Edge::Ride {
-                    on_line: sl,
-                    from_stop: &start.stop,
-                    from_time: start.time,
-                    to_stop: &end.stop,
-                    to_time: end.time,
-                }
-            }
-            (None, Some(el)) => {
-                assert_eq!(start.stop, end.stop);
-                assert_eq!(start.time, end.time);
-                Edge::Enter {
-                    line: el,
-                    at_stop: &start.stop,
-                    at_time: start.time,
-                }
-            }
-            (Some(sl), None) => {
-                assert_eq!(start.stop, end.stop);
-                assert_eq!(start.time, end.time);
-                Edge::Leave {
-                    line: sl,
-                    at_stop: &start.stop,
-                    at_time: start.time,
-                }
-            }
-        }
-    }
-}
-
-pub struct Path<'a> {
-    edges: Vec<Edge<'a>>,
-    cost: u32,
-    runtime: Duration,
-}
-
-impl Path<'_> {
-    pub fn edges(&self) -> &[Edge] {
-        &self.edges
+    pub fn stop(&self) -> &Stop {
+        &self.stop
     }
 
-    pub fn cost(&self) -> u32 {
-        self.cost
+    pub fn time(&self) -> Time {
+        self.time
     }
 
-    pub fn runtime(&self) -> Duration {
-        self.runtime
+    pub fn line(&self) -> Option<&SmolStr> {
+        self.line.as_ref()
     }
 }
 
@@ -135,7 +62,7 @@ pub struct BusNetwork {
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct State {
     cost: u32,
-    node_index: NodeIndex,
+    node: NodeIndex,
 }
 
 impl Ord for State {
@@ -240,6 +167,10 @@ impl BusNetwork {
         } % times.len()]
     }
 
+    fn is_valid_stop(&self, index: NodeIndex, end_name: &str) -> bool {
+        self.nodes[index].stop.name == end_name.into() && self.nodes[index].line.is_none()
+    }
+
     fn reconstruct_edges<'s>(
         &'s self,
         parents: &HashMap<NodeIndex, NodeIndex>,
@@ -267,45 +198,40 @@ impl BusNetwork {
     pub fn dijkstra(&self, start_name: &str, start_time: Time, end_name: &str) -> Option<Path> {
         let instant = Instant::now();
 
-        let start_index = self.find_node_index(start_name, start_time);
+        let start = self.find_node_index(start_name, start_time);
 
-        let mut distances = HashMap::<NodeIndex, u32>::with_capacity(self.nodes.len());
-        let mut queue = BinaryHeap::<State>::new();
-        let mut parents = HashMap::<NodeIndex, NodeIndex>::with_capacity(self.nodes.len());
+        let mut distances = HashMap::with_capacity(self.nodes.len());
+        let mut parents = HashMap::with_capacity(self.nodes.len());
+        let mut queue = BinaryHeap::new();
 
-        distances.insert(start_index, 0);
+        distances.insert(start, 0);
         queue.push(State {
             cost: 0,
-            node_index: start_index,
+            node: start,
         });
-        while let Some(State {
-            cost: curr_dist,
-            node_index: curr_node,
-        }) = queue.pop()
-        {
-            if self.nodes[curr_node].stop.name == end_name.into() {
-                let edges = self.reconstruct_edges(&parents, curr_node);
+
+        while let Some(cur) = queue.pop() {
+            if self.is_valid_stop(cur.node, end_name) {
+                let edges = self.reconstruct_edges(&parents, cur.node);
                 return Some(Path {
                     edges,
-                    cost: curr_dist,
+                    cost: cur.cost,
                     runtime: instant.elapsed(),
                 });
-            }
-
-            if Some(&curr_dist) > distances.get(&curr_node) {
+            } else if Some(&cur.cost) > distances.get(&cur.node) {
                 continue;
             }
 
-            for &neighbour in &self.adj_list[curr_node] {
-                let weight = self.nodes[neighbour].time - self.nodes[curr_node].time;
+            for &neighbour in &self.adj_list[cur.node] {
+                let cost = self.nodes[neighbour].time - self.nodes[cur.node].time;
 
-                let new_dist = curr_dist + weight;
-                if !distances.contains_key(&neighbour) || new_dist < distances[&neighbour] {
-                    distances.insert(neighbour, new_dist);
-                    parents.insert(neighbour, curr_node);
+                let new_cost = cur.cost + cost;
+                if !distances.contains_key(&neighbour) || new_cost < distances[&neighbour] {
+                    distances.insert(neighbour, new_cost);
+                    parents.insert(neighbour, cur.node);
                     queue.push(State {
-                        cost: new_dist,
-                        node_index: neighbour,
+                        cost: new_cost,
+                        node: neighbour,
                     });
                 }
             }
