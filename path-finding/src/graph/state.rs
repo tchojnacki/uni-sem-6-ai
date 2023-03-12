@@ -1,20 +1,22 @@
 use crate::graph::node::NodeIndex;
 use std::cmp::Ordering;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) struct State {
-    pub cost: u32,
+#[derive(Clone, Copy, PartialEq)]
+pub(super) struct State<C> {
+    pub cost: C,
     pub node: NodeIndex,
 }
 
-impl Ord for State {
+impl<C: PartialEq> Eq for State<C> {}
+
+impl<C: PartialOrd> Ord for State<C> {
     fn cmp(&self, other: &Self) -> Ordering {
-        other.cost.cmp(&self.cost)
+        self.partial_cmp(other).unwrap()
     }
 }
 
-impl PartialOrd for State {
+impl<C: PartialOrd> PartialOrd for State<C> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+        other.cost.partial_cmp(&self.cost)
     }
 }

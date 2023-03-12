@@ -5,13 +5,13 @@ use std::{
     time::Duration,
 };
 
-pub struct Path<'a> {
+pub struct Path<'a, C> {
     pub(super) edges: Vec<Edge<'a>>,
-    pub(super) cost: u32,
+    pub(super) cost: C,
     pub(super) runtime: Duration,
 }
 
-impl Path<'_> {
+impl<C> Path<'_, C> {
     fn total_distance_km(&self) -> f32 {
         self.edges.iter().map(|e| e.distance_km()).sum()
     }
@@ -37,7 +37,7 @@ fn format_edge(edge: &Edge) -> String {
     }
 }
 
-impl Display for Path<'_> {
+impl<C: Display> Display for Path<'_, C> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
         let mut waits = Vec::new();
 
