@@ -1,6 +1,6 @@
 use crate::{
     graph::node::Node,
-    structs::{Pos, Stop, Time},
+    structs::{Stop, Time},
 };
 use smol_str::SmolStr;
 use std::fmt::{self, Display};
@@ -9,10 +9,9 @@ use std::fmt::{self, Display};
 pub(super) enum Edge<'a> {
     Wait {
         at_stop_name: &'a str,
-        from_stop_pos: Pos,
         from_time: Time,
-        to_stop_pos: Pos,
         to_time: Time,
+        distance_km: f32,
     },
     Ride {
         on_line: &'a SmolStr,
@@ -40,10 +39,9 @@ impl Edge<'_> {
                 assert_eq!(start.stop.name, end.stop.name);
                 Edge::Wait {
                     at_stop_name: &start.stop.name,
-                    from_stop_pos: start.stop.pos,
                     from_time: start.time,
-                    to_stop_pos: end.stop.pos,
                     to_time: end.time,
+                    distance_km: start.stop.pos.distance_km(end.stop.pos),
                 }
             }
             (Some(sl), Some(el)) => {
@@ -74,6 +72,35 @@ impl Edge<'_> {
                     at_time: start.time,
                 }
             }
+        }
+    }
+
+    pub(super) fn distance_km(&self) -> f32 {
+        match self {
+            Edge::Wait { distance_km, .. } => *distance_km,
+            Edge::Ride {
+                from_stop, to_stop, ..
+            } => from_stop.pos.distance_km(to_stop.pos),
+            _ => 0.0,
+        }
+    }
+
+    pub(super) fn time_min(&self) -> u32 {
+        match self {
+            Edge::Wait {
+                from_time, to_time, ..
+            } => *to_time - *from_time,
+            Edge::Ride {
+                from_time, to_time, ..
+            } => *to_time - *from_time,
+            _ => 0,
+        }
+    }
+
+    pub(super) fn bus_enter_count(&self) -> u8 {
+        match self {
+            Edge::Enter { .. } => 1,
+            _ => 0,
         }
     }
 }

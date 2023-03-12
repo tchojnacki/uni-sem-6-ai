@@ -11,6 +11,24 @@ pub struct Path<'a> {
     pub(super) runtime: Duration,
 }
 
+impl Path<'_> {
+    fn total_distance_km(&self) -> f32 {
+        self.edges.iter().map(|e| e.distance_km()).sum()
+    }
+
+    fn total_time_min(&self) -> u32 {
+        self.edges.iter().map(|e| e.time_min()).sum()
+    }
+
+    fn total_bus_changes(&self) -> u8 {
+        self.edges
+            .iter()
+            .map(|e| e.bus_enter_count())
+            .sum::<u8>()
+            .saturating_sub(1)
+    }
+}
+
 fn format_edge(edge: &Edge) -> String {
     match edge {
         Edge::Wait { .. } | Edge::Ride { .. } => format!("\t{}", edge.to_string().black()),
@@ -43,7 +61,14 @@ impl Display for Path<'_> {
 
         writeln!(
             f,
-            "\nCost: {} min | Runtime: {} ms",
+            "\nDistance: {:.3} km | Time: {} min | Changes: {}",
+            self.total_distance_km(),
+            self.total_time_min(),
+            self.total_bus_changes()
+        )?;
+        writeln!(
+            f,
+            "Cost: {} | Runtime: {} ms",
             self.cost.to_string().bright_blue().bold(),
             self.runtime.as_millis().to_string().bright_blue().bold()
         )
