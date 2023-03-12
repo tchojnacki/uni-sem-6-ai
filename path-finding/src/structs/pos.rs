@@ -1,4 +1,4 @@
-use crate::vec3::Vec3;
+use crate::structs::vec3::Vec3;
 
 /// Latitude (in radians) of Wrocław Market Square.
 const CENTER_LAT_RAD: f64 = 0.89204444;

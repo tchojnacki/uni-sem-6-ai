@@ -65,7 +65,7 @@ impl Sub for Time {
 
 #[cfg(test)]
 mod tests {
-    use crate::time::Time;
+    use crate::structs::time::Time;
 
     #[test]
     fn time_is_parsed_and_formatted_correctly() {

@@ -1,10 +1,9 @@
-use std::time::Duration;
-
 use crate::{
-    bus_network::{Node, Stop},
-    time::Time,
+    graph::bus_network::{Node, Stop},
+    structs::time::Time,
 };
 use smol_str::SmolStr;
+use std::time::Duration;
 
 #[derive(Debug)]
 pub enum Edge<'a> {

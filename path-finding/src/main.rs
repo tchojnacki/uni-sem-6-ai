@@ -1,15 +1,5 @@
-use crate::time::Time;
-use bus_network::BusNetwork;
+use path_finding::{BusNetwork, Time};
 use std::time::Instant;
-
-mod bus_network;
-mod file_parser;
-mod path;
-mod pos;
-mod search;
-mod string_pool;
-mod time;
-mod vec3;
 
 fn main() {
     let start = Instant::now();

@@ -1,7 +1,7 @@
 use crate::{
-    pos::{Pos, PosConverter},
-    string_pool::StringPool,
-    time::Time,
+    structs::pos::{Pos, PosConverter},
+    structs::time::Time,
+    util::string_pool::StringPool,
 };
 use smol_str::SmolStr;
 use std::{

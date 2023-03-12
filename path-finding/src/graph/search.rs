@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use crate::bus_network::NodeIndex;
+use crate::graph::bus_network::NodeIndex;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct State {
