@@ -1,14 +1,16 @@
 use crate::{
     graph::node::Node,
-    structs::{Stop, Time},
+    structs::{Pos, Stop, Time},
 };
 use smol_str::SmolStr;
 
 #[derive(Debug)]
 pub(super) enum Edge<'a> {
     Wait {
-        at_stop: &'a Stop,
+        at_stop_name: &'a str,
+        from_stop_pos: Pos,
         from_time: Time,
+        to_stop_pos: Pos,
         to_time: Time,
     },
     Ride {
@@ -35,10 +37,11 @@ impl Edge<'_> {
         match (&start.line, &end.line) {
             (None, None) => {
                 assert_eq!(start.stop.name, end.stop.name);
-                // TODO: Handle walking between same-named stops
                 Edge::Wait {
-                    at_stop: &start.stop,
+                    at_stop_name: &start.stop.name,
+                    from_stop_pos: start.stop.pos,
                     from_time: start.time,
+                    to_stop_pos: end.stop.pos,
                     to_time: end.time,
                 }
             }
