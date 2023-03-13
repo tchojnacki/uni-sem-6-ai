@@ -3,6 +3,6 @@ mod structs;
 mod util;
 
 pub use self::{
-    graph::{BusNetwork, Dijkstra, Path},
+    graph::{dijkstra_buses, dijkstra_distance, dijkstra_time, BusNetwork, Path},
     structs::Time,
 };

@@ -1,14 +1,16 @@
 use crate::{
-    graph::{edge::Edge, state::State},
+    graph::{
+        edge::Edge,
+        state::{Cost, State},
+    },
     BusNetwork, Path, Time,
 };
 use std::{
     collections::{BinaryHeap, HashMap},
-    ops::Add,
     time::Instant,
 };
 
-fn dijkstra<'bn, C: Add<Output = C> + Default + PartialOrd + Copy, F: Fn(&Edge) -> C>(
+fn dijkstra<'bn, C: Cost, F: Fn(&Edge) -> C>(
     bn: &'bn BusNetwork,
     start_name: &str,
     start_time: Time,
@@ -60,56 +62,29 @@ fn dijkstra<'bn, C: Add<Output = C> + Default + PartialOrd + Copy, F: Fn(&Edge) 
     None
 }
 
-pub trait Dijkstra {
-    fn dijkstra_time(
-        &self,
-        start_name: &str,
-        start_time: Time,
-        end_name: &str,
-    ) -> Option<Path<u32>>;
-
-    fn dijkstra_distance(
-        &self,
-        start_name: &str,
-        start_time: Time,
-        end_name: &str,
-    ) -> Option<Path<f32>>;
-
-    fn dijkstra_changes(
-        &self,
-        start_name: &str,
-        start_time: Time,
-        end_name: &str,
-    ) -> Option<Path<u8>>;
+pub fn dijkstra_time<'bn>(
+    bn: &'bn BusNetwork,
+    start_name: &str,
+    start_time: Time,
+    end_name: &str,
+) -> Option<Path<'bn, u32>> {
+    dijkstra(bn, start_name, start_time, end_name, |e| e.time_min())
 }
 
-impl Dijkstra for BusNetwork {
-    fn dijkstra_time(
-        &self,
-        start_name: &str,
-        start_time: Time,
-        end_name: &str,
-    ) -> Option<Path<u32>> {
-        dijkstra(self, start_name, start_time, end_name, |e| e.time_min())
-    }
+pub fn dijkstra_distance<'bn>(
+    bn: &'bn BusNetwork,
+    start_name: &str,
+    start_time: Time,
+    end_name: &str,
+) -> Option<Path<'bn, f32>> {
+    dijkstra(bn, start_name, start_time, end_name, |e| e.distance_km())
+}
 
-    fn dijkstra_distance(
-        &self,
-        start_name: &str,
-        start_time: Time,
-        end_name: &str,
-    ) -> Option<Path<f32>> {
-        dijkstra(self, start_name, start_time, end_name, |e| e.distance_km())
-    }
-
-    fn dijkstra_changes(
-        &self,
-        start_name: &str,
-        start_time: Time,
-        end_name: &str,
-    ) -> Option<Path<u8>> {
-        dijkstra(self, start_name, start_time, end_name, |e| {
-            e.bus_enter_count()
-        })
-    }
+pub fn dijkstra_buses<'bn>(
+    bn: &'bn BusNetwork,
+    start_name: &str,
+    start_time: Time,
+    end_name: &str,
+) -> Option<Path<'bn, u8>> {
+    dijkstra(bn, start_name, start_time, end_name, |e| e.bus_count())
 }

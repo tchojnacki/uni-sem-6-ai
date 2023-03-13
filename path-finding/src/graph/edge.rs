@@ -97,7 +97,7 @@ impl Edge<'_> {
         }
     }
 
-    pub(super) fn bus_enter_count(&self) -> u8 {
+    pub(super) fn bus_count(&self) -> u8 {
         match self {
             Edge::Enter { .. } => 1,
             _ => 0,

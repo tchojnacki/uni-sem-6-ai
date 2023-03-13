@@ -1,17 +1,17 @@
-use crate::graph::edge::Edge;
+use crate::graph::{edge::Edge, state::Cost};
 use colored::Colorize;
 use std::{
     fmt::{self, Display},
     time::Duration,
 };
 
-pub struct Path<'a, C> {
+pub struct Path<'a, C: Cost> {
     pub(super) edges: Vec<Edge<'a>>,
     pub(super) cost: C,
     pub(super) runtime: Duration,
 }
 
-impl<C> Path<'_, C> {
+impl<C: Cost> Path<'_, C> {
     fn total_distance_km(&self) -> f32 {
         self.edges.iter().map(|e| e.distance_km()).sum()
     }
@@ -23,7 +23,7 @@ impl<C> Path<'_, C> {
     fn total_bus_changes(&self) -> u8 {
         self.edges
             .iter()
-            .map(|e| e.bus_enter_count())
+            .map(|e| e.bus_count())
             .sum::<u8>()
             .saturating_sub(1)
     }
@@ -37,7 +37,7 @@ fn format_edge(edge: &Edge) -> String {
     }
 }
 
-impl<C: Display> Display for Path<'_, C> {
+impl<C: Cost> Display for Path<'_, C> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
         let mut waits = Vec::new();
 
