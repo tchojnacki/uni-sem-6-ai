@@ -3,6 +3,7 @@ use crate::{
         edge::Edge,
         node::{Node, NodeIndex},
     },
+    structs::Stop,
     util::file_parser::row_iter,
     Time,
 };
@@ -119,6 +120,10 @@ impl BusNetwork {
             Ok(i) => i,
             Err(i) => i,
         } % times.len()]
+    }
+
+    pub(super) fn find_stop(&self, stop_name: &str) -> &Stop {
+        &self.nodes[self.name_lookup[stop_name][0]].stop
     }
 
     pub(super) fn is_valid_stop(&self, index: NodeIndex, end_name: &str) -> bool {
