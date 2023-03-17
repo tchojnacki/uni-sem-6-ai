@@ -124,14 +124,14 @@ impl Display for Edge<'_> {
                 from_time,
                 to_time,
                 ..
-            } => writeln!(f, "🕒 --- {} --> {} {}", from_time, to_time, at_stop_name),
+            } => write!(f, "🕒 --- {} --> {} {}", from_time, to_time, at_stop_name),
             Edge::Ride {
                 on_line,
                 from_stop,
                 from_time,
                 to_stop,
                 to_time,
-            } => writeln!(
+            } => write!(
                 f,
                 "🚌 {:>3} {} {} --> {} {}",
                 on_line,
@@ -144,12 +144,12 @@ impl Display for Edge<'_> {
                 line,
                 at_stop,
                 at_time,
-            } => writeln!(f, "🚉 {:>3} {} {}", line, at_time, at_stop.name),
+            } => write!(f, "🚉 {:>3} {} {}", line, at_time, at_stop.name),
             Edge::Leave {
                 line,
                 at_stop,
                 at_time,
-            } => writeln!(f, "🔚 {:>3} {} {}", line, at_time, at_stop.name),
+            } => write!(f, "🔚 {:>3} {} {}", line, at_time, at_stop.name),
         }
     }
 }

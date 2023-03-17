@@ -20,57 +20,65 @@ impl<C: Cost> Path<'_, C> {
         self.edges.iter().map(|e| e.time_min()).sum()
     }
 
-    fn total_bus_changes(&self) -> u8 {
-        self.edges
-            .iter()
-            .map(|e| e.bus_count())
-            .sum::<u8>()
-            .saturating_sub(1)
+    fn total_buses(&self) -> u8 {
+        self.edges.iter().map(|e| e.bus_count()).sum()
     }
-}
 
-fn format_edge(edge: &Edge) -> String {
-    match edge {
-        Edge::Wait { .. } | Edge::Ride { .. } => format!("\t{}", edge.to_string().black()),
-        Edge::Enter { .. } => format!("{}", edge.to_string().green().bold()),
-        Edge::Leave { .. } => format!("{}", edge.to_string().red().bold()),
+    pub fn metrics(&self) -> String {
+        let mut string = String::new();
+
+        if cfg!(debug_assertions) {
+            string += &format!(
+                "Distance: {:.3} km | Time: {} min | Buses: {}\n",
+                self.total_distance_km(),
+                self.total_time_min(),
+                self.total_buses()
+            );
+        }
+        string += &format!(
+            "Cost: {} | Runtime: {} ms",
+            self.cost.to_string().bright_blue().bold(),
+            self.runtime.as_millis().to_string().bright_blue().bold()
+        );
+
+        string
     }
 }
 
 impl<C: Cost> Display for Path<'_, C> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        fn format_edge(edge: &Edge) -> String {
+            match edge {
+                Edge::Wait { .. } | Edge::Ride { .. } => format!("\t{}", edge.to_string().black()),
+                Edge::Enter { .. } => format!("{}", edge.to_string().green().bold()),
+                Edge::Leave { .. } => format!("{}", edge.to_string().red().bold()),
+            }
+        }
+
         let mut waits = Vec::new();
 
         for edge in &self.edges {
+            if !cfg!(debug_assertions) && matches!(edge, Edge::Wait { .. } | Edge::Ride { .. }) {
+                continue;
+            }
+
             if let Edge::Wait { .. } = edge {
                 waits.push(edge);
                 continue;
             } else {
                 if !waits.is_empty() {
-                    write!(f, "{}", format_edge(waits[0]))?;
+                    writeln!(f, "{}", format_edge(waits[0]))?;
                     if waits.len() > 2 {
                         writeln!(f, "\t{:>16}", "...".black())?;
                     }
-                    write!(f, "{}", format_edge(waits[waits.len() - 1]))?;
+                    writeln!(f, "{}", format_edge(waits[waits.len() - 1]))?;
                 }
                 waits.clear();
             }
 
-            write!(f, "{}", format_edge(edge))?;
+            writeln!(f, "{}", format_edge(edge))?;
         }
 
-        writeln!(
-            f,
-            "\nDistance: {:.3} km | Time: {} min | Changes: {}",
-            self.total_distance_km(),
-            self.total_time_min(),
-            self.total_bus_changes()
-        )?;
-        writeln!(
-            f,
-            "Cost: {} | Runtime: {} ms",
-            self.cost.to_string().bright_blue().bold(),
-            self.runtime.as_millis().to_string().bright_blue().bold()
-        )
+        Ok(())
     }
 }
