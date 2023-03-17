@@ -21,4 +21,12 @@ impl Node {
             line,
         }
     }
+
+    pub fn is_line_express(&self) -> bool {
+        if let Some(line) = self.line.as_ref().and_then(|l| l.chars().next()) {
+            line.is_uppercase()
+        } else {
+            false
+        }
+    }
 }

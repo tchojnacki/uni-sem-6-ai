@@ -29,13 +29,13 @@ fn main() {
         StopHeuristic::Distance {
             changes_per_km: 0.1,
         },
-        StopHeuristic::StopNodes {
-            changes_per_node: 0.001,
-        },
+        StopHeuristic::StopNodes { weight: 2000. },
+        StopHeuristic::PreferMajorStops { penalty: 1 },
+        StopHeuristic::AvoidExpressLines { penalty: 1 },
     ] {
         let path = astar_buses(
             &bn,
-            "PL. GRUNWALDZKI",
+            "Królewska",
             Time::new(12, 34),
             "Głoska - ul. Średzka",
             sh,

@@ -88,7 +88,9 @@ pub fn astar_time<'bn>(
 pub enum StopHeuristic {
     Disabled,
     Distance { changes_per_km: f32 },
-    StopNodes { changes_per_node: f32 },
+    StopNodes { weight: f32 },
+    PreferMajorStops { penalty: u32 },
+    AvoidExpressLines { penalty: u32 },
 }
 
 pub fn astar_buses<'bn>(
@@ -104,9 +106,15 @@ pub fn astar_buses<'bn>(
         StopHeuristic::Distance { changes_per_km } => Box::new(move |next: &Node, end: &Stop| {
             (next.stop.pos.distance_km(end.pos) * changes_per_km) as u32
         }),
-        StopHeuristic::StopNodes { changes_per_node } => Box::new(move |next: &Node, _: &Stop| {
-            (bn.stop_nodes(&next.stop.name) as f32 * changes_per_node) as u32
+        StopHeuristic::StopNodes { weight } => Box::new(move |next: &Node, _: &Stop| {
+            (weight / bn.stop_nodes(&next.stop.name) as f32) as u32
         }),
+        StopHeuristic::PreferMajorStops { penalty } => {
+            Box::new(move |next: &Node, _: &Stop| if next.stop.is_major() { penalty } else { 0 })
+        }
+        StopHeuristic::AvoidExpressLines { penalty } => {
+            Box::new(move |next: &Node, _: &Stop| if next.is_line_express() { penalty } else { 0 })
+        }
     };
 
     astar(bn, start_name, start_time, end_name, cost_fn, heuristic_fn)
