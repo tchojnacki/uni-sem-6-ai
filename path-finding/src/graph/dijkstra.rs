@@ -1,8 +1,5 @@
 use crate::{
-    graph::{
-        edge::Edge,
-        state::{Cost, State},
-    },
+    graph::{edge::Edge, state::State},
     BusNetwork, Path, Time,
 };
 use std::{
@@ -10,13 +7,12 @@ use std::{
     time::Instant,
 };
 
-fn dijkstra<'bn, C: Cost, F: Fn(&Edge) -> C>(
+pub fn dijkstra_time<'bn>(
     bn: &'bn BusNetwork,
     start_name: &str,
     start_time: Time,
     end_name: &str,
-    cost_fn: F,
-) -> Option<Path<'bn, C>> {
+) -> Option<Path<'bn, u32>> {
     let instant = Instant::now();
 
     let start = bn.find_node_index(start_name, start_time);
@@ -25,9 +21,10 @@ fn dijkstra<'bn, C: Cost, F: Fn(&Edge) -> C>(
     let mut parents = HashMap::with_capacity(bn.order());
     let mut queue = BinaryHeap::new();
 
-    distances.insert(start, C::default());
+    let time_offset = bn.node(start).time - start_time;
+    distances.insert(start, time_offset);
     queue.push(State {
-        cost: C::default(),
+        cost: time_offset,
         node: start,
     });
 
@@ -44,8 +41,7 @@ fn dijkstra<'bn, C: Cost, F: Fn(&Edge) -> C>(
         }
 
         for neighbour in bn.neighbours(cur.node) {
-            let edge = Edge::from(bn.node(cur.node), bn.node(neighbour));
-            let cost = cost_fn(&edge);
+            let cost = Edge::from(bn.node(cur.node), bn.node(neighbour)).time_min();
 
             let new_cost = cur.cost + cost;
             if !distances.contains_key(&neighbour) || new_cost < distances[&neighbour] {
@@ -60,31 +56,4 @@ fn dijkstra<'bn, C: Cost, F: Fn(&Edge) -> C>(
     }
 
     None
-}
-
-pub fn dijkstra_time<'bn>(
-    bn: &'bn BusNetwork,
-    start_name: &str,
-    start_time: Time,
-    end_name: &str,
-) -> Option<Path<'bn, u32>> {
-    dijkstra(bn, start_name, start_time, end_name, |e| e.time_min())
-}
-
-pub fn dijkstra_distance<'bn>(
-    bn: &'bn BusNetwork,
-    start_name: &str,
-    start_time: Time,
-    end_name: &str,
-) -> Option<Path<'bn, f32>> {
-    dijkstra(bn, start_name, start_time, end_name, |e| e.distance_km())
-}
-
-pub fn dijkstra_buses<'bn>(
-    bn: &'bn BusNetwork,
-    start_name: &str,
-    start_time: Time,
-    end_name: &str,
-) -> Option<Path<'bn, u8>> {
-    dijkstra(bn, start_name, start_time, end_name, |e| e.bus_count())
 }
