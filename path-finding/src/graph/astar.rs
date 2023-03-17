@@ -1,3 +1,4 @@
+#![allow(clippy::type_complexity)]
 use crate::{
     graph::{
         edge::Edge,
@@ -75,11 +76,38 @@ pub fn astar_time<'bn>(
     end_name: &str,
     expected_speed_kmph: f32,
 ) -> Option<Path<'bn, u32>> {
-    let cost = |edge: &Edge| edge.time_min();
-    let heuristic = |next: &Node, end: &Stop| {
+    let cost_fn = |edge: &Edge| edge.time_min();
+    let heuristic_fn = |next: &Node, end: &Stop| {
         // v = s/t => t = s/v
         (next.stop.pos.distance_km(end.pos) / (expected_speed_kmph / 60.)) as u32
     };
 
-    astar(bn, start_name, start_time, end_name, cost, heuristic)
+    astar(bn, start_name, start_time, end_name, cost_fn, heuristic_fn)
+}
+
+pub enum StopHeuristic {
+    Disabled,
+    Distance { changes_per_km: f32 },
+    StopNodes { changes_per_node: f32 },
+}
+
+pub fn astar_buses<'bn>(
+    bn: &'bn BusNetwork,
+    start_name: &str,
+    start_time: Time,
+    end_name: &str,
+    heuristic: StopHeuristic,
+) -> Option<Path<'bn, u32>> {
+    let cost_fn = |edge: &Edge| edge.bus_count();
+    let heuristic_fn: Box<dyn Fn(&Node, &Stop) -> u32> = match heuristic {
+        StopHeuristic::Disabled => Box::new(|_: &Node, _: &Stop| 0),
+        StopHeuristic::Distance { changes_per_km } => Box::new(move |next: &Node, end: &Stop| {
+            (next.stop.pos.distance_km(end.pos) * changes_per_km) as u32
+        }),
+        StopHeuristic::StopNodes { changes_per_node } => Box::new(move |next: &Node, _: &Stop| {
+            (bn.stop_nodes(&next.stop.name) as f32 * changes_per_node) as u32
+        }),
+    };
+
+    astar(bn, start_name, start_time, end_name, cost_fn, heuristic_fn)
 }

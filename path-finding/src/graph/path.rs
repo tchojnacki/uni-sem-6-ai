@@ -20,7 +20,7 @@ impl<C: Cost> Path<'_, C> {
         self.edges.iter().map(|e| e.time_min()).sum()
     }
 
-    fn total_buses(&self) -> u8 {
+    fn total_buses(&self) -> u32 {
         self.edges.iter().map(|e| e.bus_count()).sum()
     }
 
@@ -36,7 +36,7 @@ impl<C: Cost> Path<'_, C> {
             );
         }
         string += &format!(
-            "Cost: {} | Runtime: {} ms",
+            "Cost: {} | Runtime: {} ms\n",
             self.cost.to_string().bright_blue().bold(),
             self.runtime.as_millis().to_string().bright_blue().bold()
         );

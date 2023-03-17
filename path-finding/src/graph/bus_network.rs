@@ -130,6 +130,10 @@ impl BusNetwork {
         self.nodes[index].stop.name == end_name.into() && self.nodes[index].line.is_none()
     }
 
+    pub(super) fn stop_nodes(&self, stop_name: &str) -> usize {
+        self.name_lookup[stop_name].len()
+    }
+
     pub(super) fn reconstruct_edges<'s>(
         &'s self,
         parents: &HashMap<NodeIndex, NodeIndex>,

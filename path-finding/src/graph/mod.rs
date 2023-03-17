@@ -7,5 +7,8 @@ mod path;
 mod state;
 
 pub use crate::graph::{
-    astar::astar_time, bus_network::BusNetwork, dijkstra::dijkstra_time, path::Path,
+    astar::{astar_buses, astar_time, StopHeuristic},
+    bus_network::BusNetwork,
+    dijkstra::dijkstra_time,
+    path::Path,
 };
