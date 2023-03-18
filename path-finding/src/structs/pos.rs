@@ -109,4 +109,21 @@ mod tests {
         let v = PosConverter::wgs84_to_cartesian(51.16042707, 17.12241711);
         assert!((v.len() - CENTER_RADIUS_KM).abs() < 10.0); // 10 km
     }
+
+    #[test]
+    fn distance_to_self_is_zero() {
+        let pc = PosConverter::initialize();
+        let pos = pc.wgs84_to_pos("51.16042707", "17.12241711");
+        assert!(pos.distance_km(pos).abs() < 0.001);
+    }
+
+    #[test]
+    fn distance_satisfies_the_triangle_inequality() {
+        let pc = PosConverter::initialize();
+        let pos1 = pc.wgs84_to_pos("51.11623110", "17.07370543");
+        let pos2 = pc.wgs84_to_pos("51.10297295", "17.03693395");
+        let pos3 = pc.wgs84_to_pos("51.08627943", "17.04691478");
+
+        assert!(pos1.distance_km(pos2) + pos2.distance_km(pos3) >= pos1.distance_km(pos3));
+    }
 }

@@ -57,14 +57,14 @@ impl Sub for Time {
         if self.0 >= rhs.0 {
             (self.0 - rhs.0) as u32
         } else {
-            (60 * 24 - self.0 + rhs.0) as u32
+            (60 * 24 - rhs.0 + self.0) as u32
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::structs::time::Time;
+    use super::Time;
 
     #[test]
     fn time_is_parsed_and_formatted_correctly() {
@@ -72,6 +72,21 @@ mod tests {
         for time in times {
             assert_eq!(&time[..5], Time::from(time).to_string());
         }
+    }
+
+    #[test]
+    fn time_is_subtracted_correctly() {
+        assert_eq!(Time::new(12, 34) - Time::new(12, 15), 19);
+        assert_eq!(Time::new(15, 11) - Time::new(14, 50), 21);
+        assert_eq!(Time::new(23, 59) - Time::new(0, 0), 1439);
+
+        assert_eq!(Time::new(16, 17) - Time::new(16, 17), 0);
+        assert_eq!(Time::new(0, 0) - Time::new(0, 0), 0);
+        assert_eq!(Time::new(23, 59) - Time::new(23, 59), 0);
+
+        assert_eq!(Time::new(0, 0) - Time::new(23, 59), 1);
+        assert_eq!(Time::new(4, 41) - Time::new(23, 48), 293);
+        assert_eq!(Time::new(22, 14) - Time::new(22, 15), 1439);
     }
 
     #[test]

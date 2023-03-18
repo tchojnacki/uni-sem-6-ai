@@ -3,11 +3,11 @@ use path_finding::{astar_buses, astar_time, dijkstra_time, BusNetwork, StopHeuri
 fn main() {
     let bn = BusNetwork::construct("data/connection_graph.csv");
 
-    let path = dijkstra_time(&bn, "Królewska", Time::new(22, 30), "Gajowa").unwrap();
+    let path = dijkstra_time(&bn, "Królewska", Time::new(23, 15), "Gajowa").unwrap();
     println!("{}", path);
     eprintln!("{}", path.metrics());
 
-    let path = astar_time(&bn, "Królewska", Time::new(22, 30), "Gajowa", 5.).unwrap();
+    let path = astar_time(&bn, "Królewska", Time::new(23, 15), "Gajowa", 5.).unwrap();
     println!("{}", path);
     eprintln!("{}", path.metrics());
 
@@ -20,7 +20,7 @@ fn main() {
         StopHeuristic::PreferMajorStops { penalty: 1 },
         StopHeuristic::AvoidExpressLines { penalty: 1 },
     ] {
-        let path = astar_buses(&bn, "Królewska", Time::new(22, 30), "Gajowa", sh).unwrap();
+        let path = astar_buses(&bn, "Królewska", Time::new(23, 15), "Gajowa", sh).unwrap();
         println!("{}", path);
         eprintln!("{}", path.metrics());
     }
