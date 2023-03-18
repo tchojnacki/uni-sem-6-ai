@@ -115,16 +115,22 @@ impl BusNetwork {
         self.adj_list[of].iter().copied()
     }
 
-    pub(super) fn find_node_index(&self, name: &str, time: Time) -> usize {
-        let times = &self.name_lookup[name];
-        times[match times.binary_search_by_key(&time, |&i| self.nodes[i].time) {
-            Ok(i) => i,
-            Err(i) => i,
-        } % times.len()]
+    pub(super) fn find_node_index(&self, name: &str, time: Time) -> Option<usize> {
+        let times = self.name_lookup.get(name)?;
+        times
+            .get(
+                match times.binary_search_by_key(&time, |&i| self.nodes[i].time) {
+                    Ok(i) => i,
+                    Err(i) => i,
+                } % times.len(),
+            )
+            .copied()
     }
 
-    pub(super) fn find_stop(&self, stop_name: &str) -> &Stop {
-        &self.nodes[self.name_lookup[stop_name][0]].stop
+    pub(super) fn find_stop(&self, stop_name: &str) -> Option<&Stop> {
+        let index = *self.name_lookup.get(stop_name)?.first()?;
+        let node = self.nodes.get(index)?;
+        Some(&node.stop)
     }
 
     pub(super) fn is_valid_stop(&self, index: NodeIndex, end_name: &str) -> bool {

@@ -17,7 +17,7 @@ pub fn dijkstra_time<'bn>(
 
     let instant = Instant::now();
 
-    let start = bn.find_node_index(start_name, start_time);
+    let start = bn.find_node_index(start_name, start_time)?;
 
     let mut costs = HashMap::with_capacity(bn.order());
     let mut parents = HashMap::with_capacity(bn.order());

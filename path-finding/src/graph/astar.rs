@@ -30,8 +30,8 @@ where
 
     let instant = Instant::now();
 
-    let start = bn.find_node_index(start_name, start_time);
-    let end_stop = bn.find_stop(end_name);
+    let start = bn.find_node_index(start_name, start_time)?;
+    let end_stop = bn.find_stop(end_name)?;
 
     let mut costs = HashMap::with_capacity(bn.order());
     let mut parents = HashMap::with_capacity(bn.order());
