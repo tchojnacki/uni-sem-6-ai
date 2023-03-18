@@ -14,6 +14,7 @@ use std::{
 
 type AdjList = Vec<Vec<NodeIndex>>;
 
+/// Struct representing the passenger state graph.
 pub struct BusNetwork {
     adj_list: AdjList,                             // maps NodeIndex to NodeIndex list
     nodes: Vec<Node>,                              // maps NodeIndex to Node

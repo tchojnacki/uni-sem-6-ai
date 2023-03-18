@@ -59,6 +59,7 @@ impl<C: Cost> Display for Path<'_, C> {
 
         for edge in &self.edges {
             if !cfg!(debug_assertions) && matches!(edge, Edge::Wait { .. } | Edge::Ride { .. }) {
+                // Skip waiting and riding edges in release mode.
                 continue;
             }
 

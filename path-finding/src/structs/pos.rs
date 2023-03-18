@@ -7,8 +7,7 @@ const CENTER_LAT_RAD: f64 = 0.89204444;
 const CENTER_LON_RAD: f64 = 0.29724750;
 
 /// Approximate radius of the Earth (in kilometers) near Wrocław Market Square's latitude.
-/// Generated using https://rechneronline.de/earth-radius.
-const CENTER_RADIUS_KM: f64 = 6365.343;
+const CENTER_RADIUS_KM: f64 = 6365.343; // https://rechneronline.de/earth-radius.
 
 /// Represents a location inside a coordinate system which:
 /// - is centered around Wrocław Market Square, which would have Pos(0.0, 0.0)
@@ -18,7 +17,6 @@ const CENTER_RADIUS_KM: f64 = 6365.343;
 pub(crate) struct Pos(f32, f32);
 
 impl Pos {
-    /// Returns the distance between two positions in kilometers.
     pub fn distance_km(self, other: Self) -> f32 {
         ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()
     }

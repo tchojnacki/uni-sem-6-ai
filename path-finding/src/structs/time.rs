@@ -37,7 +37,6 @@ impl From<&str> for Time {
 }
 
 impl Display for Time {
-    /// String representation of a Time struct.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let hours = self.0 / 60;
         let minutes = self.0 % 60;

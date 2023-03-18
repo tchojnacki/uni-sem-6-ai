@@ -13,6 +13,8 @@ pub fn dijkstra_time<'bn>(
     start_time: Time,
     end_name: &str,
 ) -> Option<Path<'bn, u32>> {
+    // Based on the implementation provided through MS Teams.
+
     let instant = Instant::now();
 
     let start = bn.find_node_index(start_name, start_time);

@@ -5,6 +5,7 @@ use crate::{
 use smol_str::SmolStr;
 use std::fmt::{self, Display};
 
+/// Represents a transition between passenger states.
 #[derive(Debug)]
 pub(super) enum Edge<'a> {
     Wait {

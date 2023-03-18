@@ -8,6 +8,7 @@ pub(crate) struct Stop {
 }
 
 impl Stop {
+    /// Is Stop's name uppercase (those stops are deemed more important than others).
     pub fn is_major(&self) -> bool {
         self.name.to_uppercase() == self.name.to_string()
     }

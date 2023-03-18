@@ -9,7 +9,6 @@ use std::{
     rc::Rc,
 };
 
-/// Holds data stored in a single input file row.
 pub(crate) struct RowData {
     pub line: SmolStr,
     pub s_time: Time,
@@ -24,7 +23,6 @@ pub(crate) struct RowData {
     pub e_junc_id: String,
 }
 
-/// Returns RowData for a given input line.
 fn parse_row(line: &str, sp: &mut StringPool, pc: &PosConverter) -> RowData {
     let columns = line.split(',').skip(3).collect::<Vec<_>>(); // skip indices, company
     let s_name = sp.resolve(columns[3]);

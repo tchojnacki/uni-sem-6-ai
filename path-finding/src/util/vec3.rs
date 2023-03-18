@@ -1,21 +1,17 @@
 use std::ops::{Add, Div, Mul};
 
-/// Three-dimensional vector.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Vec3(pub f64, pub f64, pub f64);
 
 impl Vec3 {
-    /// Squared vector length.
     pub fn len_2(self) -> f64 {
         self.0.powi(2) + self.1.powi(2) + self.2.powi(2)
     }
 
-    /// Vector length.
     pub fn len(self) -> f64 {
         self.len_2().sqrt()
     }
 
-    /// Vector cross product.
     pub fn cross(self, other: Self) -> Self {
         // https://en.wikipedia.org/wiki/Cross_product
         Self(
@@ -25,12 +21,10 @@ impl Vec3 {
         )
     }
 
-    /// Vector dot product.
     pub fn dot(self, other: Self) -> f64 {
         self.0 * other.0 + self.1 * other.1 + self.2 * other.2
     }
 
-    /// Returns normalized vector (facing the same direction but with unit length).
     pub fn normalized(self) -> Self {
         self / self.len()
     }
@@ -39,7 +33,6 @@ impl Vec3 {
 impl Add<Vec3> for Vec3 {
     type Output = Vec3;
 
-    /// Add two vectors element-wise.
     fn add(self, other: Self) -> Self::Output {
         Self(self.0 + other.0, self.1 + other.1, self.2 + other.2)
     }
@@ -48,7 +41,6 @@ impl Add<Vec3> for Vec3 {
 impl Mul<f64> for Vec3 {
     type Output = Vec3;
 
-    /// Multiply all vector elements by a scalar.
     fn mul(self, k: f64) -> Self::Output {
         Self(self.0 * k, self.1 * k, self.2 * k)
     }
@@ -57,7 +49,6 @@ impl Mul<f64> for Vec3 {
 impl Div<f64> for Vec3 {
     type Output = Vec3;
 
-    /// Divide all vector elements by a scalar.
     fn div(self, k: f64) -> Self::Output {
         self * (1.0 / k)
     }
