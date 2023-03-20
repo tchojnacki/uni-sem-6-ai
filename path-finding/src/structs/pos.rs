@@ -72,10 +72,10 @@ impl PosConverter {
     fn cartesian_to_local(&self, v: Vec3) -> Pos {
         // https://www.baeldung.com/cs/3d-point-2d-plane
         let k = -self.normal.dot(v);
-        let zp = v + self.normal * k;
+        let vp = v + self.normal * k;
 
-        let s1 = self.e1.dot(zp);
-        let s2 = self.e2.dot(zp);
+        let s1 = self.e1.dot(vp);
+        let s2 = self.e2.dot(vp);
         Pos(s1 as f32, s2 as f32)
     }
 }
