@@ -15,12 +15,12 @@ fn read_line(prompt: &str) -> String {
 }
 
 fn main() {
+    let bn = BusNetwork::construct("data/connection_graph.csv");
+
     let start_name = read_line("Podaj przystanek początkowy A: ");
     let end_name = read_line("Podaj przystanek końcowy B: ");
     let criteria = read_line("Podaj kryterium optymalizacyjne [t/p]: ");
     let start_time = Time::from(read_line("Podaj czas początkowy (np. \"00:00:00\"): ").as_str());
-
-    let bn = BusNetwork::construct("data/connection_graph.csv");
 
     let path = match criteria.as_str() {
         "t" => astar_time(&bn, &start_name, start_time, &end_name, EXPECTED_SPEED_KMPH),
