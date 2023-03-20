@@ -34,7 +34,7 @@ pub(crate) struct PosConverter {
 impl PosConverter {
     /// Intializes the converter, calculating all of the reusable values.
     pub fn initialize() -> Self {
-        let normal = Self::wgs84_to_cartesian(CENTER_LAT_RAD, CENTER_LON_RAD);
+        let normal = Self::wgs84_to_cartesian(CENTER_LAT_RAD, CENTER_LON_RAD).normalized();
 
         // https://math.stackexchange.com/questions/2450745/finding-orthogonal-vectors-in-a-plane
         let v0 = Vec3(1.0, 0.0, 0.0); // plane base seed, picked arbitrarily
@@ -71,7 +71,7 @@ impl PosConverter {
     /// Converts from the cartesian coordinate system to the one used by Pos.
     fn cartesian_to_local(&self, v: Vec3) -> Pos {
         // https://www.baeldung.com/cs/3d-point-2d-plane
-        let k = -self.normal.dot(v) / self.normal.len_2();
+        let k = -self.normal.dot(v);
         let zp = v + self.normal * k;
 
         let s1 = self.e1.dot(zp);
@@ -95,6 +95,13 @@ mod tests {
     fn bases_are_orthogonal() {
         let pc = PosConverter::initialize();
         assert!(pc.e1.dot(pc.e2) < 0.01);
+    }
+
+    #[test]
+    fn bases_are_unit() {
+        let pc = PosConverter::initialize();
+        assert!((dbg!(pc.e1.len()) - 1.).abs() < 0.01);
+        assert!((dbg!(pc.e2.len()) - 1.).abs() < 0.01);
     }
 
     #[test]
