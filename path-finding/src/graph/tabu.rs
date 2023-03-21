@@ -74,7 +74,7 @@ where
 
         if cfg!(debug_assertions) {
             eprintln!(
-                "Iteration {:>3}: {}",
+                "Iteration #{:0>3} cost: {}",
                 iteration.to_string().bold(),
                 best_solution.cost().to_string().blue().bold()
             );
@@ -95,4 +95,22 @@ pub fn tabu_time<'bn>(
     stops: &[&'bn str],
 ) -> Option<Path<'bn, u32>> {
     tabu(bn, start_name, start_time, stops, |edge| edge.time_min())
+}
+
+pub fn tabu_buses<'bn>(
+    bn: &'bn BusNetwork,
+    start_name: &'bn str,
+    start_time: Time,
+    stops: &[&'bn str],
+) -> Option<Path<'bn, u32>> {
+    tabu(bn, start_name, start_time, stops, |edge| edge.bus_count())
+}
+
+pub fn tabu_dist<'bn>(
+    bn: &'bn BusNetwork,
+    start_name: &'bn str,
+    start_time: Time,
+    stops: &[&'bn str],
+) -> Option<Path<'bn, f32>> {
+    tabu(bn, start_name, start_time, stops, |edge| edge.distance_km())
 }

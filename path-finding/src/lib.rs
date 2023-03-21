@@ -3,7 +3,10 @@ mod structs;
 mod util;
 
 pub use self::{
-    graph::{astar_buses, astar_time, dijkstra_time, tabu_time, BusNetwork, Path, StopHeuristic},
+    graph::{
+        astar_buses, astar_dist, astar_time, dijkstra_time, tabu_buses, tabu_dist, tabu_time,
+        BusNetwork, Cost, Path, StopHeuristic,
+    },
     structs::Time,
-    util::read_line,
+    util::{display, read_line},
 };

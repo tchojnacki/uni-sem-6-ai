@@ -120,3 +120,14 @@ pub fn astar_buses<'bn>(
 
     astar(bn, start_name, start_time, end_name, cost_fn, heuristic_fn)
 }
+
+pub fn astar_dist<'bn>(
+    bn: &'bn BusNetwork,
+    start_name: &str,
+    start_time: Time,
+    end_name: &str,
+) -> Option<Path<'bn, f32>> {
+    let cost_fn = |edge: &Edge| edge.distance_km();
+    let heuristic_fn = |next: &Node, end: &Stop| next.stop.pos.distance_km(end.pos);
+    astar(bn, start_name, start_time, end_name, cost_fn, heuristic_fn)
+}

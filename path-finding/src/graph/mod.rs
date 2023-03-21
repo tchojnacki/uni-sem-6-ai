@@ -9,9 +9,10 @@ mod state;
 mod tabu;
 
 pub use crate::graph::{
-    astar::{astar_buses, astar_time, StopHeuristic},
+    astar::{astar_buses, astar_dist, astar_time, StopHeuristic},
     bus_network::BusNetwork,
     dijkstra::dijkstra_time,
     path::Path,
-    tabu::tabu_time,
+    state::Cost,
+    tabu::{tabu_buses, tabu_dist, tabu_time},
 };
