@@ -3,6 +3,7 @@ use crate::{
     BusNetwork, Path, Time,
 };
 use colored::Colorize;
+use rand::{thread_rng, Rng};
 use std::{collections::VecDeque, time::Instant};
 
 fn is_invalid(name: &str, bn: &BusNetwork) -> bool {
@@ -47,6 +48,10 @@ where
 
         for i in 0..stops.len() {
             for j in i + 1..stops.len() {
+                if thread_rng().gen_bool(0.25) {
+                    continue;
+                }
+
                 let neighbour = current_solution.mutate(&context, i, j);
 
                 if (!tabu_list.contains(&(i, j)) || neighbour.cost() < aspiration_criteria)
