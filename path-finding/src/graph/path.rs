@@ -5,8 +5,8 @@ use std::{
     time::Duration,
 };
 
-pub struct Path<'a, C: Cost> {
-    pub(super) edges: Vec<Edge<'a>>,
+pub struct Path<'bn, C: Cost> {
+    pub(super) edges: Vec<Edge<'bn>>,
     pub(super) cost: C,
     pub(super) runtime: Duration,
 }

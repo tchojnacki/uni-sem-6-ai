@@ -56,7 +56,7 @@ impl BusNetwork {
         {
             Entry::Occupied(mut o) => {
                 o.get()
-                    .binary_search_by_key(&nodes[index].time, |&i| nodes[i].time)
+                    .binary_search_by_key(&(nodes[index].time, index), |&i| (nodes[i].time, i))
                     .map_err(|i| o.get_mut().insert(i, index))
                     .ok();
             }
@@ -86,7 +86,7 @@ impl BusNetwork {
 
         for values in name_lookup.values() {
             for i in 1..values.len() {
-                assert!(nodes[values[i - 1]].time < nodes[values[i]].time);
+                assert!(nodes[values[i - 1]].time <= nodes[values[i]].time);
                 add_edge(&mut adj_list, values[i - 1], values[i]);
             }
             if values.len() > 1 {
