@@ -2,7 +2,12 @@ use crate::{
     graph::{edge::Edge, solution::SolutionContext, state::Cost},
     BusNetwork, Path, Time,
 };
+use colored::Colorize;
 use std::{collections::VecDeque, time::Instant};
+
+fn is_invalid(name: &str, bn: &BusNetwork) -> bool {
+    bn.find_node_index(name, Time::new(0, 0)).is_none()
+}
 
 fn tabu<'bn, C, CF>(
     bn: &'bn BusNetwork,
@@ -17,6 +22,9 @@ where
 {
     // Based on the implementation provided through MS Teams.
     let instant = Instant::now();
+    if is_invalid(start_name, bn) || stops.iter().any(|s| is_invalid(s, bn)) {
+        return None;
+    }
 
     let context = SolutionContext::new(bn, start_name, start_time, cost_fn);
     let max_iterations = stops.len().pow(2);
@@ -64,11 +72,13 @@ where
             turns_since_improve += 1;
         }
 
-        println!(
-            "Iteration {:3}: Best solution cost = {}",
-            iteration,
-            best_solution.cost()
-        );
+        if cfg!(debug_assertions) {
+            eprintln!(
+                "Iteration {:>3}: {}",
+                iteration.to_string().bold(),
+                best_solution.cost().to_string().blue().bold()
+            );
+        }
     }
 
     Some(Path {

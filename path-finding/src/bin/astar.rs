@@ -1,18 +1,9 @@
-use path_finding::{astar_buses, astar_time, BusNetwork, StopHeuristic, Time};
-use std::io::{self, Write};
+use path_finding::{astar_buses, astar_time, read_line, BusNetwork, StopHeuristic, Time};
 
 const EXPECTED_SPEED_KMPH: f32 = 10.;
 const STOP_HEURISTIC: StopHeuristic = StopHeuristic::Distance {
     changes_per_km: 0.1,
 };
-
-fn read_line(prompt: &str) -> String {
-    let mut response = String::new();
-    print!("{}", prompt);
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut response).unwrap();
-    response.trim().to_string()
-}
 
 fn main() {
     let bn = BusNetwork::construct("data/connection_graph.csv");
@@ -32,6 +23,6 @@ fn main() {
         println!("{}", path);
         eprintln!("{}", path.metrics());
     } else {
-        panic!("Podano błędne dane!");
+        println!("Podano błędne dane!");
     }
 }
