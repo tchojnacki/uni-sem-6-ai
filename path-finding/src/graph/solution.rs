@@ -55,7 +55,7 @@ impl<'bn, C: Cost, CF: Fn(&Edge) -> C> SolutionContext<'bn, C, CF> {
         for i in 0..stops.len() {
             for j in 0..stops.len() {
                 let start = self.bn.find_node_index(stops[i], self.start_time).unwrap();
-                let (_, cost) = self.dijkstra_helper(start, stops[j]);
+                let (_, cost, _) = self.dijkstra_helper(start, stops[j]);
                 total = total + cost;
             }
         }
@@ -70,16 +70,17 @@ impl<'bn, C: Cost, CF: Fn(&Edge) -> C> SolutionContext<'bn, C, CF> {
     }
 
     fn calculate_cost(&self, solution: &[&str]) -> C {
-        let mut path = solution.iter().copied().collect::<VecDeque<_>>();
-        path.push_back(self.start_name);
+        let mut solution = solution.iter().copied().collect::<VecDeque<_>>();
+        solution.push_back(self.start_name);
+
         let mut previous = self
             .bn
             .find_node_index(self.start_name, self.start_time)
             .unwrap();
         let mut total = C::default();
 
-        while let Some(current) = path.pop_front() {
-            let (next, cost) = self.dijkstra_helper(previous, current);
+        while let Some(current) = solution.pop_front() {
+            let (next, cost, _) = self.dijkstra_helper(previous, current);
             previous = next;
             total = total + cost;
         }
@@ -87,8 +88,28 @@ impl<'bn, C: Cost, CF: Fn(&Edge) -> C> SolutionContext<'bn, C, CF> {
         total
     }
 
-    fn dijkstra_helper(&self, start: NodeIndex, end_name: &str) -> (NodeIndex, C) {
+    pub fn reconstruct_edges(&self, solution: &Solution<'bn, C>) -> Vec<Edge<'bn>> {
+        let mut solution = solution.order.iter().copied().collect::<VecDeque<_>>();
+        solution.push_back(self.start_name);
+
+        let mut previous = self
+            .bn
+            .find_node_index(self.start_name, self.start_time)
+            .unwrap();
+        let mut path = Vec::new();
+
+        while let Some(current) = solution.pop_front() {
+            let (next, _, part) = self.dijkstra_helper(previous, current);
+            previous = next;
+            path.extend(part);
+        }
+
+        path
+    }
+
+    fn dijkstra_helper(&self, start: NodeIndex, end_name: &str) -> (NodeIndex, C, Vec<Edge<'bn>>) {
         let mut costs = HashMap::with_capacity(self.bn.order());
+        let mut parents = HashMap::with_capacity(self.bn.order());
         let mut queue = BinaryHeap::new();
         costs.insert(start, C::default());
         queue.push(State {
@@ -98,7 +119,11 @@ impl<'bn, C: Cost, CF: Fn(&Edge) -> C> SolutionContext<'bn, C, CF> {
 
         while let Some(cur) = queue.pop() {
             if self.bn.is_valid_stop(cur.node, end_name) {
-                return (cur.node, cur.cost);
+                return (
+                    cur.node,
+                    cur.cost,
+                    self.bn.reconstruct_edges(&parents, cur.node),
+                );
             } else if Some(&cur.cost) > costs.get(&cur.node) {
                 continue;
             }
@@ -108,6 +133,7 @@ impl<'bn, C: Cost, CF: Fn(&Edge) -> C> SolutionContext<'bn, C, CF> {
                 let new_cost = cur.cost + (self.cost_fn)(&edge);
                 if !costs.contains_key(&neighbour) || new_cost < costs[&neighbour] {
                     costs.insert(neighbour, new_cost);
+                    parents.insert(neighbour, cur.node);
                     queue.push(State {
                         cost: new_cost,
                         node: neighbour,

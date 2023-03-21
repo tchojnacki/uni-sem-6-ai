@@ -2,13 +2,13 @@ use crate::{
     graph::{edge::Edge, solution::SolutionContext, state::Cost},
     BusNetwork, Path, Time,
 };
-use std::collections::VecDeque;
+use std::{collections::VecDeque, time::Instant};
 
 fn tabu<'bn, C, CF>(
     bn: &'bn BusNetwork,
-    start_name: &str,
+    start_name: &'bn str,
     start_time: Time,
-    stops: &[&str],
+    stops: &[&'bn str],
     cost_fn: CF,
 ) -> Option<Path<'bn, C>>
 where
@@ -16,6 +16,7 @@ where
     CF: Fn(&Edge) -> C,
 {
     // Based on the implementation provided through MS Teams.
+    let instant = Instant::now();
 
     let context = SolutionContext::new(bn, start_name, start_time, cost_fn);
     let max_iterations = stops.len().pow(2);
@@ -70,17 +71,18 @@ where
         );
     }
 
-    // println!("Best solution: {:?}", best_solution);
-    println!("Best solution cost: {}", best_solution.cost());
-
-    None
+    Some(Path {
+        edges: context.reconstruct_edges(&best_solution),
+        cost: best_solution.cost(),
+        runtime: instant.elapsed(),
+    })
 }
 
 pub fn tabu_time<'bn>(
     bn: &'bn BusNetwork,
-    start_name: &str,
+    start_name: &'bn str,
     start_time: Time,
-    stops: &[&str],
+    stops: &[&'bn str],
 ) -> Option<Path<'bn, u32>> {
     tabu(bn, start_name, start_time, stops, |edge| edge.time_min())
 }

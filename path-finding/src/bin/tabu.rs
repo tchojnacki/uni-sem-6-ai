@@ -17,5 +17,11 @@ fn main() {
         "PL. GRUNWALDZKI",
     ];
 
-    tabu_time(bn, start_name, start_time, stops);
+    let path = tabu_time(bn, start_name, start_time, stops);
+    if let Some(path) = path {
+        println!("{}", path);
+        eprintln!("{}", path.metrics());
+    } else {
+        panic!("Podano błędne dane!");
+    }
 }

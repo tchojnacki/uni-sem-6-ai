@@ -27,7 +27,6 @@ where
     HF: Fn(&Node, &Stop) -> C,
 {
     // Based on the implementation provided through MS Teams.
-
     let instant = Instant::now();
 
     let start = bn.find_node_index(start_name, start_time)?;

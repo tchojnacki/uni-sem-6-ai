@@ -141,11 +141,11 @@ impl BusNetwork {
         self.name_lookup[stop_name].len()
     }
 
-    pub(super) fn reconstruct_edges<'s>(
-        &'s self,
+    pub(super) fn reconstruct_edges<'bn>(
+        &'bn self,
         parents: &HashMap<NodeIndex, NodeIndex>,
         to: NodeIndex,
-    ) -> Vec<Edge<'s>> {
+    ) -> Vec<Edge<'bn>> {
         let mut current = to;
         let mut path = VecDeque::from([to]);
         while let Some(&parent) = parents.get(&current) {
