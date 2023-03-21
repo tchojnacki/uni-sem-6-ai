@@ -4,6 +4,7 @@ mod dijkstra;
 mod edge;
 mod node;
 mod path;
+mod solution;
 mod state;
 mod tabu;
 
