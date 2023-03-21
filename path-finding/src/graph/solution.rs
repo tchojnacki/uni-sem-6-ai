@@ -11,135 +11,111 @@ use std::collections::{BinaryHeap, HashMap, VecDeque};
 
 #[derive(Clone)]
 pub(super) struct Solution<'bn, C: Cost> {
-    start_name: &'bn str,
-    start_time: Time,
     order: Vec<&'bn str>,
     cost: C,
 }
 
 impl<'bn, C: Cost> Solution<'bn, C> {
-    pub fn initial<FC>(
-        start_name: &'bn str,
-        start_time: Time,
-        stops: &[&'bn str],
-        bn: &BusNetwork,
-        cost_fn: FC,
-    ) -> Self
-    where
-        FC: Fn(&Edge) -> C,
-    {
-        let mut order = stops.to_vec();
-        order.shuffle(&mut thread_rng());
-        let cost = cost(bn, start_name, start_time, &order, cost_fn);
-        Self {
-            start_name,
-            start_time,
-            order,
-            cost,
-        }
-    }
-
-    pub fn mutate<FC>(&self, i: usize, j: usize, bn: &BusNetwork, cost_fn: FC) -> Self
-    where
-        FC: Fn(&Edge) -> C,
-    {
+    pub fn mutate<CF: Fn(&Edge) -> C>(
+        &self,
+        ctx: &SolutionContext<C, CF>,
+        i: usize,
+        j: usize,
+    ) -> Self {
         let mut order = self.order.clone();
         order.swap(i, j);
-        let cost = cost(bn, self.start_name, self.start_time, &order, cost_fn);
-        Self {
-            order,
-            cost,
-            ..*self
-        }
+        let cost = ctx.calculate_cost(&order);
+        Self { order, cost }
     }
 
     pub fn cost(&self) -> C {
         self.cost
     }
+}
 
-    pub fn aspiration_criteria<FC>(
-        stops: &[&str],
-        bn: &BusNetwork,
-        start_time: Time,
-        cost_fn: FC,
-    ) -> C
-    where
-        FC: Fn(&Edge) -> C,
-    {
-        let mut aspiration_criteria = C::default();
+pub(super) struct SolutionContext<'bn, C: Cost, CF: Fn(&Edge) -> C> {
+    bn: &'bn BusNetwork,
+    start_name: &'bn str,
+    start_time: Time,
+    cost_fn: CF,
+}
+
+impl<'bn, C: Cost, CF: Fn(&Edge) -> C> SolutionContext<'bn, C, CF> {
+    pub fn new(bn: &'bn BusNetwork, start_name: &'bn str, start_time: Time, cost_fn: CF) -> Self {
+        Self {
+            bn,
+            start_name,
+            start_time,
+            cost_fn,
+        }
+    }
+
+    pub fn aspiration_criteria(&self, stops: &[&str]) -> C {
+        let mut total = C::default();
         for i in 0..stops.len() {
             for j in 0..stops.len() {
-                let start = bn.find_node_index(stops[i], start_time).unwrap();
-                let (_, cost) = dijkstra_helper(bn, start, stops[j], &cost_fn);
-                aspiration_criteria = aspiration_criteria + cost;
+                let start = self.bn.find_node_index(stops[i], self.start_time).unwrap();
+                let (_, cost) = self.dijkstra_helper(start, stops[j]);
+                total = total + cost;
             }
         }
-        aspiration_criteria
+        total
     }
-}
 
-fn dijkstra_helper<C, CF>(
-    bn: &BusNetwork,
-    start: NodeIndex,
-    end_name: &str,
-    cost_fn: CF,
-) -> (NodeIndex, C)
-where
-    C: Cost,
-    CF: Fn(&Edge) -> C,
-{
-    let mut costs = HashMap::with_capacity(bn.order());
-    let mut queue = BinaryHeap::new();
-    costs.insert(start, C::default());
-    queue.push(State {
-        cost: C::default(),
-        node: start,
-    });
+    pub fn initial_solution(&self, stops: &[&'bn str]) -> Solution<'bn, C> {
+        let mut order = stops.to_vec();
+        order.shuffle(&mut thread_rng());
+        let cost = self.calculate_cost(&order);
+        Solution { order, cost }
+    }
 
-    while let Some(cur) = queue.pop() {
-        if bn.is_valid_stop(cur.node, end_name) {
-            return (cur.node, cur.cost);
-        } else if Some(&cur.cost) > costs.get(&cur.node) {
-            continue;
+    fn calculate_cost(&self, solution: &[&str]) -> C {
+        let mut path = solution.iter().copied().collect::<VecDeque<_>>();
+        path.push_back(self.start_name);
+        let mut previous = self
+            .bn
+            .find_node_index(self.start_name, self.start_time)
+            .unwrap();
+        let mut total = C::default();
+
+        while let Some(current) = path.pop_front() {
+            let (next, cost) = self.dijkstra_helper(previous, current);
+            previous = next;
+            total = total + cost;
         }
 
-        for neighbour in bn.neighbours(cur.node) {
-            let edge = Edge::from(bn.node(cur.node), bn.node(neighbour));
-            let new_cost = cur.cost + cost_fn(&edge);
-            if !costs.contains_key(&neighbour) || new_cost < costs[&neighbour] {
-                costs.insert(neighbour, new_cost);
-                queue.push(State {
-                    cost: new_cost,
-                    node: neighbour,
-                });
+        total
+    }
+
+    fn dijkstra_helper(&self, start: NodeIndex, end_name: &str) -> (NodeIndex, C) {
+        let mut costs = HashMap::with_capacity(self.bn.order());
+        let mut queue = BinaryHeap::new();
+        costs.insert(start, C::default());
+        queue.push(State {
+            cost: C::default(),
+            node: start,
+        });
+
+        while let Some(cur) = queue.pop() {
+            if self.bn.is_valid_stop(cur.node, end_name) {
+                return (cur.node, cur.cost);
+            } else if Some(&cur.cost) > costs.get(&cur.node) {
+                continue;
+            }
+
+            for neighbour in self.bn.neighbours(cur.node) {
+                let edge = Edge::from(self.bn.node(cur.node), self.bn.node(neighbour));
+                let new_cost = cur.cost + (self.cost_fn)(&edge);
+                if !costs.contains_key(&neighbour) || new_cost < costs[&neighbour] {
+                    costs.insert(neighbour, new_cost);
+                    queue.push(State {
+                        cost: new_cost,
+                        node: neighbour,
+                    });
+                }
             }
         }
+
+        unreachable!();
     }
-
-    unreachable!();
-}
-
-fn cost<C, CF>(
-    bn: &BusNetwork,
-    start_name: &str,
-    start_time: Time,
-    solution: &[&str],
-    cost_fn: CF,
-) -> C
-where
-    C: Cost,
-    CF: Fn(&Edge) -> C,
-{
-    let mut path = solution.iter().copied().collect::<VecDeque<_>>();
-    path.push_back(start_name);
-    let mut previous = bn.find_node_index(start_name, start_time).unwrap();
-    let mut total = C::default();
-
-    while let Some(current) = path.pop_front() {
-        let (next, cost) = dijkstra_helper(bn, previous, current, &cost_fn);
-        previous = next;
-        total = total + cost;
-    }
-
-    total
 }

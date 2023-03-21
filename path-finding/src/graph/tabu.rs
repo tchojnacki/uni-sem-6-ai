@@ -1,5 +1,5 @@
 use crate::{
-    graph::{edge::Edge, solution::Solution, state::Cost},
+    graph::{edge::Edge, solution::SolutionContext, state::Cost},
     BusNetwork, Path, Time,
 };
 use std::collections::VecDeque;
@@ -17,18 +17,19 @@ where
 {
     // Based on the implementation provided through MS Teams.
 
+    let context = SolutionContext::new(bn, start_name, start_time, cost_fn);
     let max_iterations = stops.len().pow(2);
-    let improve_thresh = (max_iterations as f64).sqrt().floor() as usize;
-    let aspiration_criteria = Solution::aspiration_criteria(stops, bn, start_time, &cost_fn);
+    let improve_threshold = (max_iterations as f64).sqrt().floor() as usize;
+    let aspiration_criteria = context.aspiration_criteria(stops);
 
     let mut tabu_list = VecDeque::new();
-    let mut turns_improved = 0;
+    let mut turns_since_improve = 0;
 
-    let mut current_solution = Solution::initial(start_name, start_time, stops, bn, &cost_fn);
+    let mut current_solution = context.initial_solution(stops);
     let mut best_solution = current_solution.clone();
 
     for iteration in 0..max_iterations {
-        if turns_improved > improve_thresh {
+        if turns_since_improve > improve_threshold {
             break;
         }
 
@@ -37,7 +38,7 @@ where
 
         for i in 0..stops.len() {
             for j in i + 1..stops.len() {
-                let neighbour = current_solution.mutate(i, j, bn, &cost_fn);
+                let neighbour = current_solution.mutate(&context, i, j);
 
                 if (!tabu_list.contains(&(i, j)) || neighbour.cost() < aspiration_criteria)
                     && neighbour.cost() < best_neighbour.cost()
@@ -57,9 +58,9 @@ where
 
         if best_neighbour.cost() < best_solution.cost() {
             best_solution = best_neighbour.clone();
-            turns_improved = 0;
+            turns_since_improve = 0;
         } else {
-            turns_improved += 1;
+            turns_since_improve += 1;
         }
 
         println!(
