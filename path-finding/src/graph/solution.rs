@@ -142,6 +142,6 @@ impl<'bn, C: Cost, CF: Fn(&Edge) -> C> SolutionContext<'bn, C, CF> {
             }
         }
 
-        unreachable!();
+        panic!("No path exists!");
     }
 }
