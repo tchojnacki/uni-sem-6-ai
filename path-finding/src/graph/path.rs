@@ -71,8 +71,8 @@ impl<C: Cost> Display for Path<'_, C> {
                     writeln!(f, "{}", format_edge(waits[0]))?;
                     if waits.len() > 2 {
                         writeln!(f, "\t{:>16}", "...".black())?;
+                        writeln!(f, "{}", format_edge(waits[waits.len() - 1]))?;
                     }
-                    writeln!(f, "{}", format_edge(waits[waits.len() - 1]))?;
                 }
                 waits.clear();
             }
