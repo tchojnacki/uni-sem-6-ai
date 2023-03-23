@@ -5,7 +5,10 @@ fn main() {
 
     let start_name = read_line("Podaj przystanek początkowy A: ");
     let stops = read_line("Podaj przystanki do odwiedzenia (oddzielone średnikiem): ");
-    let stops = stops.split(';').collect::<Vec<&str>>();
+    let mut stops = stops.split(';').collect::<Vec<&str>>();
+    if stops == [""] {
+        stops.pop();
+    }
     let criteria = read_line("Podaj kryterium optymalizacyjne [t/p/d]: ");
     let start_time = Time::from(read_line("Podaj czas początkowy (np. \"00:00:00\"): ").as_str());
 
