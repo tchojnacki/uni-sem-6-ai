@@ -12,7 +12,7 @@ mod tests {
     use std::mem;
 
     #[test]
-    fn square_has_correct_repr() {
+    fn has_correct_mem_repr() {
         assert_eq!(mem::size_of::<Square>(), 1);
     }
 }
