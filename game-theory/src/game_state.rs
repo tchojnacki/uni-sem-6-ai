@@ -1,9 +1,13 @@
 use crate::{
     player::Player,
-    position::{Position, BOARD_SQUARES},
+    position::{Position, BOARD_SIDE, BOARD_SQUARES},
     square::Square,
 };
-use std::collections::HashSet;
+use colored::Colorize;
+use std::{
+    collections::HashSet,
+    fmt::{self, Display},
+};
 
 const DIRECTIONS: [(i32, i32); 8] = [
     (1, 0),
@@ -45,12 +49,8 @@ impl GameState {
         self.board[position.index()]
     }
 
-    fn player_discs(&self) -> impl Iterator<Item = Position> + '_ {
-        Position::all().filter(|&pos| self.at(pos) == Square::Placed(self.turn))
-    }
-
-    fn opponent_discs(&self) -> impl Iterator<Item = Position> + '_ {
-        Position::all().filter(|&pos| self.at(pos) == Square::Placed(self.turn.opponent()))
+    fn discs_of(&self, player: Player) -> impl Iterator<Item = Position> + '_ {
+        Position::all().filter(move |&pos| self.at(pos) == Square::Placed(player))
     }
 
     fn occupied_squares(&self) -> impl Iterator<Item = Position> + '_ {
@@ -70,7 +70,7 @@ impl GameState {
             return result.into_iter();
         }
 
-        for position in self.player_discs() {
+        for position in self.discs_of(self.turn) {
             for dir in DIRECTIONS {
                 if let Some(mut coord) = position.offset(dir) {
                     while self.at(coord) == Square::Placed(self.turn.opponent()) {
@@ -130,6 +130,35 @@ impl GameState {
     }
 }
 
+impl Display for GameState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for row in 0..BOARD_SIDE {
+            for col in 0..BOARD_SIDE {
+                // TODO: highlight valid moves
+                self.board[row * 8 + col].fmt(f)?;
+            }
+            writeln!(f)?;
+        }
+
+        writeln!(
+            f,
+            "Turn: {} | Score: {}:{} | Winner: {}",
+            self.turn,
+            self.discs_of(Player::Black)
+                .count()
+                .to_string()
+                .black()
+                .bold(),
+            self.discs_of(Player::White)
+                .count()
+                .to_string()
+                .white()
+                .bold(),
+            "---" // TODO
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -168,8 +197,8 @@ mod tests {
     #[test]
     fn othello_earlygame() {
         let gs = GameState::othello_initial();
-        assert_eq!(gs.player_discs().count(), 2);
-        assert_eq!(gs.opponent_discs().count(), 2);
+        assert_eq!(gs.discs_of(gs.turn).count(), 2);
+        assert_eq!(gs.discs_of(gs.turn.opponent()).count(), 2);
         assert_valid_moves(&gs, &[p("D3"), p("C4"), p("F5"), p("E6")]);
 
         // From: https://www.eothello.com/game-rules

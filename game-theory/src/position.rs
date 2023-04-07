@@ -1,6 +1,6 @@
 use std::fmt::{self, Display};
 
-const BOARD_SIDE: usize = 8;
+pub const BOARD_SIDE: usize = 8;
 pub const BOARD_SQUARES: usize = BOARD_SIDE.pow(2);
 
 const COL_NOTATION: &str = "ABCDEFGH";

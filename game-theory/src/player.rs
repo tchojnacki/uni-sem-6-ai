@@ -1,3 +1,6 @@
+use colored::Colorize;
+use std::fmt::{self, Display};
+
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Player {
@@ -11,6 +14,20 @@ impl Player {
             Player::Black => Player::White,
             Player::White => Player::Black,
         }
+    }
+}
+
+impl Display for Player {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Player::Black => "Black".black(),
+                Player::White => "White".white(),
+            }
+            .bold()
+        )
     }
 }
 
