@@ -98,15 +98,16 @@ impl GameState {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::position::p;
 
     #[test]
     fn reversi_earlygame_is_correct() {
         let gs = GameState::reversi_initial();
         assert_eq!(gs.occupied_squares().count(), 0);
 
-        let mut moves = gs.valid_moves().map(|p| p.index()).collect::<Vec<_>>();
-        moves.sort();
-        assert_eq!(moves, [27, 28, 35, 36]);
+        let mut moves = gs.valid_moves().collect::<Vec<_>>();
+        moves.sort_by_key(|p| p.index());
+        assert_eq!(moves, [p("D4"), p("E4"), p("D5"), p("E5")]);
     }
 
     #[test]
@@ -115,8 +116,8 @@ mod tests {
         assert_eq!(gs.player_discs().count(), 2);
         assert_eq!(gs.opponent_discs().count(), 2);
 
-        let mut moves = gs.valid_moves().map(|p| p.index()).collect::<Vec<_>>();
-        moves.sort();
-        assert_eq!(moves, [19, 26, 37, 44]);
+        let mut moves = gs.valid_moves().collect::<Vec<_>>();
+        moves.sort_by_key(|p| p.index());
+        assert_eq!(moves, [p("D3"), p("C4"), p("F5"), p("E6")]);
     }
 }
