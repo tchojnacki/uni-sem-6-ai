@@ -1,6 +1,6 @@
 use crate::player::Player;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Square {
     Empty,
     Placed(Player),
