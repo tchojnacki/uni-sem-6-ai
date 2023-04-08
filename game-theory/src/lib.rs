@@ -1,8 +1,11 @@
 mod game_state;
+mod outcome;
 mod player;
 mod position;
 mod square;
 mod styles;
 
 pub use game_state::GameState;
-pub use position::Position;
+pub use outcome::Outcome;
+pub use player::Player;
+pub use position::{p, Position};
