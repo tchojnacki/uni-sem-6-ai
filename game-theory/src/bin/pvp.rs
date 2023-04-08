@@ -3,9 +3,8 @@ use std::io::{stdin, stdout, Write};
 
 pub fn main() {
     let mut gs = GameState::othello_initial();
-
-    loop {
-        print!("{}", gs);
+    print!("{}", gs);
+    while gs.outcome().is_none() {
         let mut buffer = String::new();
         print!("Position: ");
         stdout().flush().unwrap();
@@ -14,6 +13,7 @@ pub fn main() {
         if let Some(position) = Position::from(buffer.trim()) {
             if let Some(next) = gs.make_move(position) {
                 gs = next;
+                print!("{}", gs);
             } else {
                 println!("Illegal move!");
             }
