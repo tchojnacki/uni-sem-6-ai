@@ -106,8 +106,31 @@ impl GameState {
     }
 
     fn is_valid(&self, position: Position) -> bool {
-        // TODO: Find faster way to check validity
-        self.valid_moves().any(|p| p == position)
+        if self.at(position) != Square::Empty {
+            return false;
+        }
+
+        // Reversi earlygame variant
+        if Position::CENTER_SQUARES.contains(&position) {
+            return true;
+        }
+
+        for dir in DIRECTIONS {
+            if let Some(mut coord) = position.offset(dir) {
+                while self.at(coord) == Square::Placed(self.turn.opponent()) {
+                    if let Some(next) = coord.offset(dir) {
+                        coord = next;
+                        if self.at(coord) == Square::Placed(self.turn) {
+                            return true;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        false
     }
 
     pub fn make_move(&self, position: Position) -> Option<GameState> {
