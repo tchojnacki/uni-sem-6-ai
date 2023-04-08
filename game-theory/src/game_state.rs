@@ -1,7 +1,8 @@
 use crate::{
     player::Player,
-    position::{Position, BOARD_SIDE, BOARD_SQUARES},
+    position::{p, Position, BOARD_SIDE, BOARD_SQUARES},
     square::Square,
+    styles::{strip_string, EMPTY_BG, VALID_FG},
 };
 use colored::Colorize;
 use std::{
@@ -132,29 +133,31 @@ impl GameState {
 
 impl Display for GameState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for row in 0..BOARD_SIDE {
-            for col in 0..BOARD_SIDE {
-                // TODO: highlight valid moves
-                self.board[row * 8 + col].fmt(f)?;
+        for row in 0..BOARD_SIDE as i32 {
+            for col in 0..BOARD_SIDE as i32 {
+                let position = p("A1").offset((col, row)).unwrap();
+                let mut square_str = self.at(position).to_string();
+                if self.is_valid(position) {
+                    square_str = strip_string(&square_str)
+                        .color(VALID_FG)
+                        .on_color(EMPTY_BG)
+                        .to_string();
+                }
+                write!(f, "{}", square_str)?;
             }
             writeln!(f)?;
         }
 
+        let black = self.discs_of(Player::Black).count();
+        let white = self.discs_of(Player::White).count();
+
         writeln!(
             f,
-            "Turn: {} | Score: {}:{} | Winner: {}",
+            "Turn: {} | Score: {}-{} | Winner: {}",
             self.turn,
-            self.discs_of(Player::Black)
-                .count()
-                .to_string()
-                .black()
-                .bold(),
-            self.discs_of(Player::White)
-                .count()
-                .to_string()
-                .white()
-                .bold(),
-            "---" // TODO
+            black.to_string().bright_black(),
+            white.to_string().bright_white(),
+            "-" // TODO
         )
     }
 }
@@ -169,6 +172,8 @@ mod tests {
         moves.sort_by_key(|p| p.index());
         assert_eq!(moves, expected);
     }
+
+    // TODO: is_valid tests
 
     #[test]
     fn reversi_earlygame() {

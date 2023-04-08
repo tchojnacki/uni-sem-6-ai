@@ -23,8 +23,8 @@ impl Display for Player {
             f,
             "{}",
             match self {
-                Player::Black => "Black".black(),
-                Player::White => "White".white(),
+                Player::Black => "Black".bright_black(),
+                Player::White => "White".bright_white(),
             }
             .bold()
         )
