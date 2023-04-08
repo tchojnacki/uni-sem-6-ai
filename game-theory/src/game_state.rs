@@ -71,6 +71,17 @@ impl GameState {
         Position::all().filter(move |&pos| self.at(pos) == Square::Placed(player))
     }
 
+    fn score_of(&self, player: Player) -> usize {
+        match self.outcome() {
+            Some(Outcome::Winner(p)) if p == player => {
+                // counting empty squares for the winner
+                BOARD_SQUARES - self.discs_of(player.opponent()).count()
+            }
+            Some(Outcome::Draw) => BOARD_SQUARES / 2,
+            Some(Outcome::Winner(_)) | None => self.discs_of(player).count(),
+        }
+    }
+
     fn occupied_squares(&self) -> impl Iterator<Item = Position> + '_ {
         Position::all().filter(|&pos| matches!(self.at(pos), Square::Placed(_)))
     }
@@ -159,7 +170,6 @@ impl GameState {
 
         let black_discs = self.discs_of(Player::Black).count();
         let white_discs = self.discs_of(Player::White).count();
-
         Some(match black_discs.cmp(&white_discs) {
             Ordering::Greater => Outcome::Winner(Player::Black),
             Ordering::Less => Outcome::Winner(Player::White),
@@ -185,15 +195,12 @@ impl Display for GameState {
             writeln!(f)?;
         }
 
-        let black = self.discs_of(Player::Black).count();
-        let white = self.discs_of(Player::White).count();
-
         writeln!(
             f,
             "Turn: {} | Score: {}-{} | Winner: {}",
             self.turn,
-            black.to_string().bright_black(),
-            white.to_string().bright_white(),
+            self.score_of(Player::Black).to_string().bright_black(),
+            self.score_of(Player::White).to_string().bright_white(),
             self.outcome()
                 .map(|o| o.to_string())
                 .unwrap_or(String::from("-"))
@@ -259,8 +266,8 @@ mod tests {
     #[test]
     fn othello_earlygame() {
         let gs = GameState::othello_initial();
-        assert_eq!(gs.discs_of(gs.turn).count(), 2);
-        assert_eq!(gs.discs_of(gs.turn.opponent()).count(), 2);
+        assert_eq!(gs.score_of(gs.turn), 2);
+        assert_eq!(gs.score_of(gs.turn.opponent()), 2);
         assert_valid_moves(&gs, &[p("D3"), p("C4"), p("F5"), p("E6")]);
 
         // From: https://www.eothello.com/game-rules
