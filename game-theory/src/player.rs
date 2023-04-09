@@ -2,7 +2,7 @@ use colored::Colorize;
 use std::fmt::{self, Display};
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Player {
     Black = 1,
     White = 2,

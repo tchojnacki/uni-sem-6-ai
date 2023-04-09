@@ -8,8 +8,9 @@ use crate::{
 use colored::Colorize;
 use std::{
     cmp::Ordering,
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     fmt::{self, Display},
+    time::{Duration, Instant},
 };
 
 const DIRECTIONS: [(i32, i32); 8] = [
@@ -23,7 +24,7 @@ const DIRECTIONS: [(i32, i32); 8] = [
     (1, -1),
 ];
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct GameState {
     turn: Player,
     board: [Square; BOARD_SQUARES],
@@ -133,6 +134,17 @@ impl GameState {
         false
     }
 
+    fn pass_if_required(&mut self) {
+        if self.valid_moves().next().is_none() {
+            // No moves for opponent, pass
+            self.turn = self.turn.opponent();
+            if self.valid_moves().next().is_none() {
+                // No moves again, game is over, correct the player
+                self.turn = self.turn.opponent();
+            }
+        }
+    }
+
     pub fn make_move(&self, position: Position) -> Option<GameState> {
         if !self.is_valid(position) {
             return None;
@@ -160,15 +172,7 @@ impl GameState {
         }
 
         next_state.turn = next_state.turn.opponent();
-        if next_state.valid_moves().next().is_none() {
-            // No moves for opponent, pass
-            next_state.turn = next_state.turn.opponent();
-            if next_state.valid_moves().next().is_none() {
-                // No moves again, game is over, correct the player
-                next_state.turn = next_state.turn.opponent();
-            }
-        }
-
+        next_state.pass_if_required();
         Some(next_state)
     }
 
@@ -184,6 +188,100 @@ impl GameState {
             Ordering::Less => Outcome::Winner(Player::White),
             Ordering::Equal => Outcome::Draw,
         })
+    }
+
+    pub fn from_board_string_unverified(board_str: &str) -> Option<GameState> {
+        let board_str = strip_string(board_str);
+        if board_str.len() != BOARD_SQUARES {
+            return None;
+        }
+
+        let mut result = GameState {
+            board: board_str
+                .chars()
+                .map(|c| match c {
+                    '0' => Square::Empty,
+                    '1' => Square::Placed(Player::Black),
+                    '2' => Square::Placed(Player::White),
+                    _ => unreachable!(), // strip_string should only leave 0, 1 and 2
+                })
+                .collect::<Vec<Square>>()
+                .try_into()
+                .unwrap(),
+            turn: Player::Black,
+        };
+        if result.occupied_squares().count() % 2 == 1 {
+            result.turn = Player::White;
+        }
+        result.pass_if_required();
+        Some(result)
+    }
+
+    fn original_discs(&self) -> HashMap<Position, Player> {
+        // TODO: mark squares between original squares as original
+
+        let mut result = HashMap::new();
+        for position in self.occupied_squares() {
+            let mut is_original = true;
+            for dir in DIRECTIONS {
+                let opp = (-dir.0, -dir.1);
+                let in_dir = matches!(
+                    position.offset(dir).map(|p| self.at(p)),
+                    Some(Square::Placed(_))
+                );
+                let in_opp = matches!(
+                    position.offset(opp).map(|p| self.at(p)),
+                    Some(Square::Placed(_))
+                );
+                if in_dir && in_opp {
+                    is_original = false;
+                    break;
+                }
+            }
+            if is_original {
+                let Square::Placed(color) = self.at(position) else { unreachable!() };
+                result.insert(position, color);
+            }
+        }
+        result
+    }
+
+    pub fn verify_reachability(&self, timeout: Duration) -> Option<bool> {
+        let start_time = Instant::now();
+
+        let target_disc_set = self.occupied_squares().collect::<HashSet<Position>>();
+        let original_disc_map = self.original_discs();
+
+        let mut stack = Vec::from([GameState::reversi_initial()]);
+        let mut visited = HashSet::new();
+        while let Some(current) = stack.pop() {
+            if current == *self {
+                return Some(true);
+            }
+
+            if Instant::now() - start_time >= timeout {
+                return None;
+            }
+
+            for position in current.valid_moves() {
+                if !target_disc_set.contains(&position) {
+                    continue;
+                }
+                if let Some(&color) = original_disc_map.get(&position) {
+                    if color != current.turn {
+                        continue;
+                    }
+                }
+                let next = current.make_move(position).unwrap();
+                if visited.contains(&next) {
+                    continue;
+                }
+                visited.insert(next.clone());
+                stack.push(next);
+            }
+        }
+
+        Some(false)
     }
 }
 
