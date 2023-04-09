@@ -1,3 +1,4 @@
+pub mod ai;
 mod game_state;
 mod outcome;
 mod player;

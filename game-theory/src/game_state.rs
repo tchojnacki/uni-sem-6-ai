@@ -106,7 +106,7 @@ impl GameState {
         result.into_iter()
     }
 
-    fn is_valid(&self, position: Position) -> bool {
+    pub fn is_valid(&self, position: Position) -> bool {
         if self.at(position) != Square::Empty {
             return false;
         }
