@@ -31,6 +31,10 @@ pub struct GameState {
 }
 
 impl GameState {
+    pub const fn turn(&self) -> Player {
+        self.turn
+    }
+
     pub const fn reversi_initial() -> Self {
         Self {
             turn: Player::Black,
@@ -69,7 +73,7 @@ impl GameState {
         }
     }
 
-    fn occupied_squares(&self) -> impl Iterator<Item = Position> + '_ {
+    pub fn occupied_squares(&self) -> impl Iterator<Item = Position> + '_ {
         Position::all().filter(|&pos| matches!(self.at(pos), Square::Placed(_)))
     }
 
@@ -146,6 +150,7 @@ impl GameState {
     }
 
     pub fn make_move(&self, position: Position) -> Option<GameState> {
+        // TODO: panic instead of returning Option
         if !self.is_valid(position) {
             return None;
         }
@@ -184,9 +189,9 @@ impl GameState {
         let black_discs = self.discs_of(Player::Black).count();
         let white_discs = self.discs_of(Player::White).count();
         Some(match black_discs.cmp(&white_discs) {
-            Ordering::Greater => Outcome::Winner(Player::Black),
             Ordering::Less => Outcome::Winner(Player::White),
             Ordering::Equal => Outcome::Draw,
+            Ordering::Greater => Outcome::Winner(Player::Black),
         })
     }
 
