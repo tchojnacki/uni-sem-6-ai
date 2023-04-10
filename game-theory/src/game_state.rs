@@ -114,7 +114,7 @@ impl GameState {
         }
     }
 
-    const fn at(&self, position: Position) -> Square {
+    pub const fn at(&self, position: Position) -> Square {
         self.board[position.index()]
     }
 

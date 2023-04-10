@@ -1,5 +1,5 @@
 use game_theory::{
-    ai::{AlphaBeta, FirstMove, Greedy, Heuristic, Minimax, RandomMove, Strategy},
+    ai::{AlphaBeta, FirstMove, Greedy, Heuristic, Minimax, RandomMove, Strategy, WEIGHTS_KORMAN},
     GameState, Outcome, Player,
 };
 
@@ -10,8 +10,9 @@ fn main() {
         &mut FirstMove::default(),
         &mut Greedy::default(),
         &mut RandomMove::default(),
-        &mut Minimax::new(Heuristic::MaximumDiscs, 4),
-        &mut AlphaBeta::new(Heuristic::MaximumDiscs, 4),
+        &mut Minimax::new(Heuristic::MaximumDisc, 3),
+        &mut AlphaBeta::new(Heuristic::MaximumDisc, 3),
+        &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_KORMAN)), 3),
     ];
 
     let mut wins = vec![0; strats.len()];
