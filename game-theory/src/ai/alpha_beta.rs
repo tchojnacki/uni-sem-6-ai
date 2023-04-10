@@ -1,11 +1,16 @@
-use super::Strategy;
-use crate::{GameState, Outcome, Player, Position};
+use super::{
+    minimax::{MAX_PLAYER, MIN_PLAYER},
+    Strategy,
+};
+use crate::{GameState, Outcome, Position};
 use std::fmt::{self, Display};
 
-pub const MAX_PLAYER: Player = Player::Black;
-pub const MIN_PLAYER: Player = Player::White;
-
-fn minimax(gs: &GameState, depth: u32) -> (f64, Option<Position>) {
+fn alpha_beta(
+    gs: &GameState,
+    depth: u32,
+    mut alpha: f64,
+    mut beta: f64,
+) -> (f64, Option<Position>) {
     if let Some(outcome) = gs.outcome() {
         return (
             match outcome {
@@ -28,41 +33,49 @@ fn minimax(gs: &GameState, depth: u32) -> (f64, Option<Position>) {
     if gs.turn() == MAX_PLAYER {
         let (mut max_eval, mut max_pos) = (f64::NEG_INFINITY, None);
         for position in gs.valid_moves() {
-            let (eval, _) = minimax(&gs.make_move(position), depth - 1);
+            let (eval, _) = alpha_beta(&gs.make_move(position), depth - 1, alpha, beta);
             max_eval = max_eval.max(eval);
             max_pos = Some(position);
+            alpha = alpha.max(eval);
+            if beta <= alpha {
+                break;
+            }
         }
         (max_eval, max_pos)
     } else {
         let (mut min_eval, mut min_pos) = (f64::INFINITY, None);
         for position in gs.valid_moves() {
-            let (eval, _) = minimax(&gs.make_move(position), depth - 1);
+            let (eval, _) = alpha_beta(&gs.make_move(position), depth - 1, alpha, beta);
             min_eval = min_eval.min(eval);
             min_pos = Some(position);
+            beta = beta.min(eval);
+            if beta <= alpha {
+                break;
+            }
         }
         (min_eval, min_pos)
     }
 }
 
-pub struct Minimax {
+pub struct AlphaBeta {
     max_depth: u32,
 }
 
-impl Minimax {
+impl AlphaBeta {
     pub const fn new(max_depth: u32) -> Self {
         Self { max_depth }
     }
 }
 
-impl Display for Minimax {
+impl Display for AlphaBeta {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "MM({})", self.max_depth)
+        write!(f, "αβ({})", self.max_depth)
     }
 }
 
-impl Strategy for Minimax {
+impl Strategy for AlphaBeta {
     fn decide(&mut self, gs: &GameState) -> crate::Position {
-        let (_, pos) = minimax(gs, self.max_depth);
+        let (_, pos) = alpha_beta(gs, self.max_depth, f64::NEG_INFINITY, f64::INFINITY);
         pos.unwrap()
     }
 }
