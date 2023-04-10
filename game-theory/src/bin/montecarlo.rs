@@ -11,15 +11,14 @@ fn main() {
         &mut Greedy::default(),
         &mut RandomMove::default(),
     ];
-    let names = ["FirstMove", "Greedy", "RandomMove"];
 
     let mut wins = vec![0; strats.len()];
-
     for bi in 0..strats.len() {
         for wi in 0..strats.len() {
             let mut results = [0; 3];
             for _ in 0..ROUNDS {
                 let mut gs = GameState::othello_initial();
+
                 while gs.outcome().is_none() {
                     let strat = &mut strats[match gs.turn() {
                         Player::Black => bi,
@@ -37,7 +36,7 @@ fn main() {
             }
             println!(
                 "{} B {}-{} W {} ({} draws)",
-                names[bi], results[1], results[2], names[wi], results[0]
+                strats[bi], results[1], results[2], strats[wi], results[0]
             );
             wins[bi] += results[1];
             wins[wi] += results[2];
@@ -47,7 +46,7 @@ fn main() {
     for i in 0..wins.len() {
         println!(
             "{}: {:.1}% WR",
-            names[i],
+            strats[i],
             100. * wins[i] as f64 / (wins.len() * 2 * ROUNDS) as f64
         )
     }

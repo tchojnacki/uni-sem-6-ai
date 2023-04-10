@@ -1,6 +1,9 @@
 use super::strategy::Strategy;
 use crate::{GameState, Position};
-use std::io::{stdin, stdout, BufRead, Write};
+use std::{
+    fmt::{self, Display},
+    io::{stdin, stdout, BufRead, Write},
+};
 
 pub struct PlayerInput {
     input: Box<dyn BufRead>,
@@ -13,6 +16,12 @@ impl Default for PlayerInput {
             input: Box::new(stdin().lock()),
             output: Box::new(stdout().lock()),
         }
+    }
+}
+
+impl Display for PlayerInput {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, stringify!(PlayerInput))
     }
 }
 

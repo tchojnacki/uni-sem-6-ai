@@ -1,7 +1,10 @@
 use super::strategy::Strategy;
 use crate::{GameState, Position};
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
-use std::cmp::Ordering;
+use std::{
+    cmp::Ordering,
+    fmt::{self, Display},
+};
 
 pub struct Greedy {
     rng: StdRng,
@@ -12,6 +15,12 @@ impl Default for Greedy {
         Self {
             rng: SeedableRng::from_entropy(),
         }
+    }
+}
+
+impl Display for Greedy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, stringify!(Greedy))
     }
 }
 

@@ -1,6 +1,7 @@
 use super::strategy::Strategy;
 use crate::{GameState, Position};
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
+use std::fmt::{self, Display};
 
 pub struct RandomMove {
     rng: StdRng,
@@ -11,6 +12,12 @@ impl Default for RandomMove {
         Self {
             rng: SeedableRng::from_entropy(),
         }
+    }
+}
+
+impl Display for RandomMove {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, stringify!(RandomMove))
     }
 }
 
