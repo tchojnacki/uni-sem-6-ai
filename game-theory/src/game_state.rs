@@ -149,10 +149,9 @@ impl GameState {
         }
     }
 
-    pub fn make_move(&self, position: Position) -> Option<GameState> {
-        // TODO: panic instead of returning Option
+    pub fn make_move(&self, position: Position) -> GameState {
         if !self.is_valid(position) {
-            return None;
+            panic!("Invalid move!");
         }
 
         let mut next_state = (*self).clone();
@@ -178,7 +177,7 @@ impl GameState {
 
         next_state.turn = next_state.turn.opponent();
         next_state.pass_if_required();
-        Some(next_state)
+        next_state
     }
 
     pub fn outcome(&self) -> Option<Outcome> {
@@ -223,8 +222,6 @@ impl GameState {
     }
 
     fn original_discs(&self) -> HashMap<Position, Player> {
-        // TODO: mark squares between original squares as original
-
         let mut result = HashMap::new();
         for position in self.occupied_squares() {
             let mut is_original = true;
@@ -277,7 +274,7 @@ impl GameState {
                         continue;
                     }
                 }
-                let next = current.make_move(position).unwrap();
+                let next = current.make_move(position);
                 if visited.contains(&next) {
                     continue;
                 }
@@ -347,16 +344,16 @@ mod tests {
         assert_eq!(gs.occupied_squares().count(), 0);
         assert_valid_moves(&gs, &[p("D4"), p("E4"), p("D5"), p("E5")]);
 
-        let gs = gs.make_move(p("D5")).unwrap();
+        let gs = gs.make_move(p("D5"));
         assert_valid_moves(&gs, &[p("D4"), p("E4"), p("E5")]);
 
-        let gs = gs.make_move(p("E4")).unwrap();
+        let gs = gs.make_move(p("E4"));
         assert_valid_moves(&gs, &[p("D4"), p("E5")]);
 
-        let gs = gs.make_move(p("D4")).unwrap();
+        let gs = gs.make_move(p("D4"));
         assert_valid_moves(&gs, &[p("E5")]);
 
-        let gs = gs.make_move(p("E5")).unwrap();
+        let gs = gs.make_move(p("E5"));
         // No flipping in first four moves
         assert_eq!(gs.at(p("D5")), Square::Placed(Player::Black));
         assert_eq!(gs.at(p("E4")), Square::Placed(Player::White));
@@ -372,10 +369,10 @@ mod tests {
         assert_valid_moves(&gs, &[p("D3"), p("C4"), p("F5"), p("E6")]);
 
         // From: https://www.eothello.com/game-rules
-        let gs = gs.make_move(p("D3")).unwrap();
+        let gs = gs.make_move(p("D3"));
         assert_valid_moves(&gs, &[p("C3"), p("E3"), p("C5")]);
 
-        let gs = gs.make_move(p("C5")).unwrap();
+        let gs = gs.make_move(p("C5"));
         assert_valid_moves(&gs, &[p("B6"), p("C6"), p("D6"), p("E6"), p("F6")]);
     }
 }

@@ -8,7 +8,7 @@ fn from_transcript(transcript: &'static str) -> GameState {
         .map(|c| p(std::str::from_utf8(c).unwrap()))
     {
         assert_eq!(gs.outcome(), None);
-        gs = gs.make_move(m).unwrap();
+        gs = gs.make_move(m);
     }
     gs
 }

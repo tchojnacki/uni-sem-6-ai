@@ -14,7 +14,7 @@ fn main() {
     while states.len() < SAMPLE_SIZE {
         let mut gs = GameState::reversi_initial();
         while gs.outcome().is_none() {
-            gs = gs.make_move(strategy.decide(&gs)).unwrap();
+            gs = gs.make_move(strategy.decide(&gs));
             states.insert(gs.clone());
         }
     }

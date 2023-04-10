@@ -9,7 +9,7 @@ fn main() {
     print!("{}", gs);
     while gs.outcome().is_none() {
         let position = strategy.decide(&gs);
-        gs = gs.make_move(position).unwrap();
+        gs = gs.make_move(position);
         print!("{}", gs);
     }
 }
