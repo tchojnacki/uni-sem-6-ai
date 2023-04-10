@@ -1,15 +1,16 @@
 use game_theory::{
-    ai::{FirstMove, Greedy, RandomMove, Strategy},
+    ai::{FirstMove, Greedy, Minimax, RandomMove, Strategy},
     GameState, Outcome, Player,
 };
 
-const ROUNDS: usize = 10_000;
+const ROUNDS: usize = 100;
 
 fn main() {
     let strats: &mut [&mut dyn Strategy] = &mut [
         &mut FirstMove::default(),
         &mut Greedy::default(),
         &mut RandomMove::default(),
+        &mut Minimax::new(2),
     ];
 
     let mut wins = vec![0; strats.len()];
