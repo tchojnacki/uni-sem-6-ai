@@ -1,11 +1,11 @@
 use game_theory::{
-    ai::{PlayerProvidedAi, Strategy},
+    ai::{PlayerInput, Strategy},
     GameState,
 };
 
 fn main() {
     let mut gs = GameState::othello_initial();
-    let mut strategy = PlayerProvidedAi::default();
+    let mut strategy = PlayerInput::default();
     print!("{}", gs);
     while gs.outcome().is_none() {
         let position = strategy.decide(&gs);

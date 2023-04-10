@@ -1,5 +1,5 @@
 use game_theory::{
-    ai::{RandomAi, Strategy},
+    ai::{RandomMove, Strategy},
     GameState, Player, BOARD_SQUARES,
 };
 use std::{cmp::Ordering, collections::HashSet};
@@ -7,7 +7,7 @@ use std::{cmp::Ordering, collections::HashSet};
 const SAMPLE_SIZE: usize = 1_000_000;
 
 fn main() {
-    let mut strategy = RandomAi::default();
+    let mut strategy = RandomMove::default();
     let mut states = HashSet::new();
     states.insert(GameState::reversi_initial());
 

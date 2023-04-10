@@ -2,12 +2,12 @@ use super::strategy::Strategy;
 use crate::{GameState, Position};
 use std::io::{stdin, stdout, BufRead, Write};
 
-pub struct PlayerProvidedAi {
+pub struct PlayerInput {
     input: Box<dyn BufRead>,
     output: Box<dyn Write>,
 }
 
-impl Default for PlayerProvidedAi {
+impl Default for PlayerInput {
     fn default() -> Self {
         Self {
             input: Box::new(stdin().lock()),
@@ -16,7 +16,7 @@ impl Default for PlayerProvidedAi {
     }
 }
 
-impl Strategy for PlayerProvidedAi {
+impl Strategy for PlayerInput {
     fn decide(&mut self, gs: &GameState) -> Position {
         loop {
             write!(self.output, "Position: ").unwrap();
