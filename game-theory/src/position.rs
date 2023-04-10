@@ -30,6 +30,10 @@ impl Position {
         (0..BOARD_SQUARES).map(Position)
     }
 
+    pub fn corners() -> impl Iterator<Item = Self> {
+        [p("A1"), p("H1"), p("A8"), p("H8")].into_iter()
+    }
+
     pub const CENTER_SQUARES: [Position; 4] = [
         Position(27), // D4
         Position(28), // E4

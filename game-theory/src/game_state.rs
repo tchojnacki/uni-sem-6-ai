@@ -62,7 +62,7 @@ impl GameState {
         Position::all().filter(move |&pos| self.at(pos) == Square::Placed(player))
     }
 
-    fn score_of(&self, player: Player) -> usize {
+    pub fn score_of(&self, player: Player) -> usize {
         match self.outcome() {
             Some(Outcome::Winner(p)) if p == player => {
                 // counting empty squares for the winner
