@@ -27,13 +27,13 @@ impl Display for Greedy {
 impl Strategy for Greedy {
     fn decide(&mut self, gs: &GameState) -> Position {
         let valid_corners = Position::corners()
-            .filter(|&c| gs.is_valid(c))
+            .filter(|&c| gs.moves().contains(&c))
             .collect::<Vec<Position>>();
         if !valid_corners.is_empty() {
             return *valid_corners.choose(&mut self.rng).unwrap();
         }
 
-        let moves = gs.valid_moves().collect::<Vec<Position>>();
+        let moves = gs.moves().to_vec();
         let mut best_score = gs.make_move(moves[0]).score_of(gs.turn());
         let mut best_moves = Vec::from([moves[0]]);
         for &position in moves.iter().skip(1) {

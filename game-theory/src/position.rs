@@ -7,7 +7,7 @@ const COL_NOTATION: &str = "ABCDEFGH";
 const ROW_NOTATION: &str = "12345678";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct Position(usize);
+pub struct Position(u8);
 
 pub fn p(notation: &'static str) -> Position {
     Position::from(notation).unwrap()
@@ -23,11 +23,11 @@ impl Position {
         }
         let col = COL_NOTATION.chars().position(|c| c == col_char)?;
         let row = ROW_NOTATION.chars().position(|c| c == row_char)?;
-        Some(Position(row * BOARD_SIDE + col))
+        Some(Position((row * BOARD_SIDE + col) as u8))
     }
 
     pub fn all() -> impl Iterator<Item = Self> {
-        (0..BOARD_SQUARES).map(Position)
+        (0..BOARD_SQUARES as u8).map(Position)
     }
 
     pub fn corners() -> impl Iterator<Item = Self> {
@@ -42,15 +42,15 @@ impl Position {
     ];
 
     pub const fn index(&self) -> usize {
-        self.0
+        self.0 as usize
     }
 
     pub const fn offset(&self, by: (i32, i32)) -> Option<Self> {
-        let col = (self.0 % BOARD_SIDE) as i32 + by.0;
-        let row = (self.0 / BOARD_SIDE) as i32 + by.1;
+        let col = (self.index() % BOARD_SIDE) as i32 + by.0;
+        let row = (self.index() / BOARD_SIDE) as i32 + by.1;
 
         if 0 <= col && col < BOARD_SIDE as i32 && 0 <= row && row < BOARD_SIDE as i32 {
-            Some(Position((row * BOARD_SIDE as i32 + col) as usize))
+            Some(Position((row * BOARD_SIDE as i32 + col) as u8))
         } else {
             None
         }
@@ -62,8 +62,8 @@ impl Display for Position {
         write!(
             f,
             "{}{}",
-            COL_NOTATION.chars().nth(self.0 % 8).unwrap(),
-            ROW_NOTATION.chars().nth(self.0 / 8).unwrap()
+            COL_NOTATION.chars().nth(self.index() % 8).unwrap(),
+            ROW_NOTATION.chars().nth(self.index() / 8).unwrap()
         )
     }
 }

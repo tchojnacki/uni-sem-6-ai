@@ -36,7 +36,7 @@ impl Strategy for PlayerInput {
             buffer.make_ascii_uppercase();
 
             if let Some(position) = Position::from(buffer.trim()) {
-                if gs.is_valid(position) {
+                if gs.moves().contains(&position) {
                     return position;
                 } else {
                     writeln!(self.output, "Illegal move!").unwrap();

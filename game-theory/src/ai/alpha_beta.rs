@@ -32,7 +32,7 @@ fn alpha_beta(
 
     if gs.turn() == MAX_PLAYER {
         let (mut max_eval, mut max_pos) = (f64::NEG_INFINITY, None);
-        for position in gs.valid_moves() {
+        for &position in gs.moves() {
             let (eval, _) = alpha_beta(&gs.make_move(position), depth - 1, alpha, beta);
             max_eval = max_eval.max(eval);
             max_pos = Some(position);
@@ -44,7 +44,7 @@ fn alpha_beta(
         (max_eval, max_pos)
     } else {
         let (mut min_eval, mut min_pos) = (f64::INFINITY, None);
-        for position in gs.valid_moves() {
+        for &position in gs.moves() {
             let (eval, _) = alpha_beta(&gs.make_move(position), depth - 1, alpha, beta);
             min_eval = min_eval.min(eval);
             min_pos = Some(position);

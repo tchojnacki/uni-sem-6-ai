@@ -1,3 +1,5 @@
 [workspace]
-
 members = ["path-finding", "game-theory"]
+
+[profile.release]
+debug = true

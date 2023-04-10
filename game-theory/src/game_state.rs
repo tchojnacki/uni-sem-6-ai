@@ -10,6 +10,8 @@ use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
     fmt::{self, Display},
+    hash::{Hash, Hasher},
+    mem,
     time::{Duration, Instant},
 };
 
@@ -24,10 +26,63 @@ const DIRECTIONS: [(i32, i32); 8] = [
     (1, -1),
 ];
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+fn precompute_moves(turn: Player, board: [Square; BOARD_SQUARES]) -> Box<[Position]> {
+    let mut result = HashSet::new();
+
+    // Reversi earlygame variant
+    if board
+        .iter()
+        .filter(|s| matches!(s, Square::Placed(_)))
+        .count()
+        < 4
+    {
+        result.extend(
+            Position::CENTER_SQUARES
+                .into_iter()
+                .filter(|&p| board[p.index()] == Square::Empty),
+        );
+    } else {
+        for position in Position::all().filter(|p| board[p.index()] == Square::Placed(turn)) {
+            for dir in DIRECTIONS {
+                if let Some(mut coord) = position.offset(dir) {
+                    while board[coord.index()] == Square::Placed(turn.opponent()) {
+                        if let Some(next) = coord.offset(dir) {
+                            coord = next;
+                            if board[coord.index()] == Square::Empty {
+                                result.insert(coord);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    result.into_iter().collect()
+}
+
+#[derive(Clone)]
 pub struct GameState {
     turn: Player,
     board: [Square; BOARD_SQUARES],
+    moves: Box<[Position]>,
+}
+
+impl PartialEq for GameState {
+    fn eq(&self, other: &Self) -> bool {
+        self.turn == other.turn && self.board == other.board
+    }
+}
+
+impl Eq for GameState {}
+
+impl Hash for GameState {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.turn.hash(state);
+        self.board.hash(state);
+    }
 }
 
 impl GameState {
@@ -35,22 +90,27 @@ impl GameState {
         self.turn
     }
 
-    pub const fn reversi_initial() -> Self {
+    pub fn reversi_initial() -> Self {
+        let turn = Player::Black;
+        let board = [Square::Empty; BOARD_SQUARES];
         Self {
-            turn: Player::Black,
-            board: [Square::Empty; BOARD_SQUARES],
+            turn,
+            board,
+            moves: precompute_moves(turn, board),
         }
     }
 
-    pub const fn othello_initial() -> Self {
+    pub fn othello_initial() -> Self {
+        let turn = Player::Black;
         let mut board = [Square::Empty; BOARD_SQUARES];
         board[27] = Square::Placed(Player::White); // D4
         board[28] = Square::Placed(Player::Black); // E4
         board[35] = Square::Placed(Player::Black); // D5
         board[36] = Square::Placed(Player::White); // E5
         Self {
-            turn: Player::Black,
+            turn,
             board,
+            moves: precompute_moves(turn, board),
         }
     }
 
@@ -77,80 +137,25 @@ impl GameState {
         Position::all().filter(|&pos| matches!(self.at(pos), Square::Placed(_)))
     }
 
-    pub fn valid_moves(&self) -> impl Iterator<Item = Position> + '_ {
-        let mut result = HashSet::new();
-
-        // Reversi earlygame variant
-        if self.occupied_squares().count() < 4 {
-            result.extend(
-                Position::CENTER_SQUARES
-                    .into_iter()
-                    .filter(|&p| self.at(p) == Square::Empty),
-            );
-            return result.into_iter();
-        }
-
-        for position in self.discs_of(self.turn) {
-            for dir in DIRECTIONS {
-                if let Some(mut coord) = position.offset(dir) {
-                    while self.at(coord) == Square::Placed(self.turn.opponent()) {
-                        if let Some(next) = coord.offset(dir) {
-                            coord = next;
-                            if self.at(coord) == Square::Empty {
-                                result.insert(coord);
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        result.into_iter()
-    }
-
-    pub fn is_valid(&self, position: Position) -> bool {
-        if self.at(position) != Square::Empty {
-            return false;
-        }
-
-        // Reversi earlygame variant
-        if Position::CENTER_SQUARES.contains(&position) {
-            return true;
-        }
-
-        for dir in DIRECTIONS {
-            if let Some(mut coord) = position.offset(dir) {
-                while self.at(coord) == Square::Placed(self.turn.opponent()) {
-                    if let Some(next) = coord.offset(dir) {
-                        coord = next;
-                        if self.at(coord) == Square::Placed(self.turn) {
-                            return true;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-
-        false
+    pub fn moves(&self) -> &[Position] {
+        &self.moves
     }
 
     fn pass_if_required(&mut self) {
-        if self.valid_moves().next().is_none() {
+        if self.moves().is_empty() {
             // No moves for opponent, pass
             self.turn = self.turn.opponent();
-            if self.valid_moves().next().is_none() {
+            let previous = mem::replace(&mut self.moves, precompute_moves(self.turn, self.board));
+            if self.moves().is_empty() {
                 // No moves again, game is over, correct the player
                 self.turn = self.turn.opponent();
+                self.moves = previous;
             }
         }
     }
 
     pub fn make_move(&self, position: Position) -> GameState {
-        if !self.is_valid(position) {
+        if !self.moves.contains(&position) {
             panic!("Invalid move!");
         }
 
@@ -176,12 +181,13 @@ impl GameState {
         }
 
         next_state.turn = next_state.turn.opponent();
+        next_state.moves = precompute_moves(next_state.turn, next_state.board);
         next_state.pass_if_required();
         next_state
     }
 
     pub fn outcome(&self) -> Option<Outcome> {
-        if self.valid_moves().next().is_some() {
+        if !self.moves().is_empty() {
             return None;
         }
 
@@ -200,22 +206,26 @@ impl GameState {
             return None;
         }
 
+        let board = board_str
+            .chars()
+            .map(|c| match c {
+                '0' => Square::Empty,
+                '1' => Square::Placed(Player::Black),
+                '2' => Square::Placed(Player::White),
+                _ => unreachable!(), // strip_string should only leave 0, 1 and 2
+            })
+            .collect::<Vec<Square>>()
+            .try_into()
+            .unwrap();
+        let turn = Player::Black;
         let mut result = GameState {
-            board: board_str
-                .chars()
-                .map(|c| match c {
-                    '0' => Square::Empty,
-                    '1' => Square::Placed(Player::Black),
-                    '2' => Square::Placed(Player::White),
-                    _ => unreachable!(), // strip_string should only leave 0, 1 and 2
-                })
-                .collect::<Vec<Square>>()
-                .try_into()
-                .unwrap(),
-            turn: Player::Black,
+            board,
+            turn,
+            moves: precompute_moves(turn, board),
         };
         if result.occupied_squares().count() % 2 == 1 {
             result.turn = Player::White;
+            result.moves = precompute_moves(result.turn, board);
         }
         result.pass_if_required();
         Some(result)
@@ -265,7 +275,7 @@ impl GameState {
                 return None;
             }
 
-            for position in current.valid_moves() {
+            for &position in current.moves() {
                 if !target_disc_set.contains(&position) {
                     continue;
                 }
@@ -293,7 +303,7 @@ impl Display for GameState {
             for col in 0..BOARD_SIDE as i32 {
                 let position = p("A1").offset((col, row)).unwrap();
                 let mut square_str = self.at(position).to_string();
-                if self.is_valid(position) {
+                if self.moves.contains(&position) {
                     square_str = strip_string(&square_str)
                         .color(VALID_FG)
                         .on_color(EMPTY_BG)
@@ -322,36 +332,26 @@ mod tests {
     use super::*;
     use crate::position::p;
 
-    fn assert_valid_moves(gs: &GameState, expected: &[Position]) {
-        let mut moves = gs.valid_moves().collect::<Vec<_>>();
+    fn assert_moves(gs: &GameState, expected: &[Position]) {
+        let mut moves = gs.moves().to_vec();
         moves.sort_by_key(|p| p.index());
         assert_eq!(moves, expected);
-    }
-
-    #[test]
-    fn is_valid_returns_true_for_all_valid_squares() {
-        let gs = GameState::othello_initial();
-        let valid_squares = gs.valid_moves().collect::<HashSet<Position>>();
-
-        for position in Position::all() {
-            assert_eq!(valid_squares.contains(&position), gs.is_valid(position));
-        }
     }
 
     #[test]
     fn reversi_earlygame() {
         let gs = GameState::reversi_initial();
         assert_eq!(gs.occupied_squares().count(), 0);
-        assert_valid_moves(&gs, &[p("D4"), p("E4"), p("D5"), p("E5")]);
+        assert_moves(&gs, &[p("D4"), p("E4"), p("D5"), p("E5")]);
 
         let gs = gs.make_move(p("D5"));
-        assert_valid_moves(&gs, &[p("D4"), p("E4"), p("E5")]);
+        assert_moves(&gs, &[p("D4"), p("E4"), p("E5")]);
 
         let gs = gs.make_move(p("E4"));
-        assert_valid_moves(&gs, &[p("D4"), p("E5")]);
+        assert_moves(&gs, &[p("D4"), p("E5")]);
 
         let gs = gs.make_move(p("D4"));
-        assert_valid_moves(&gs, &[p("E5")]);
+        assert_moves(&gs, &[p("E5")]);
 
         let gs = gs.make_move(p("E5"));
         // No flipping in first four moves
@@ -366,13 +366,13 @@ mod tests {
         let gs = GameState::othello_initial();
         assert_eq!(gs.score_of(gs.turn), 2);
         assert_eq!(gs.score_of(gs.turn.opponent()), 2);
-        assert_valid_moves(&gs, &[p("D3"), p("C4"), p("F5"), p("E6")]);
+        assert_moves(&gs, &[p("D3"), p("C4"), p("F5"), p("E6")]);
 
         // From: https://www.eothello.com/game-rules
         let gs = gs.make_move(p("D3"));
-        assert_valid_moves(&gs, &[p("C3"), p("E3"), p("C5")]);
+        assert_moves(&gs, &[p("C3"), p("E3"), p("C5")]);
 
         let gs = gs.make_move(p("C5"));
-        assert_valid_moves(&gs, &[p("B6"), p("C6"), p("D6"), p("E6"), p("F6")]);
+        assert_moves(&gs, &[p("B6"), p("C6"), p("D6"), p("E6"), p("F6")]);
     }
 }

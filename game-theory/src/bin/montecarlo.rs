@@ -1,5 +1,5 @@
 use game_theory::{
-    ai::{FirstMove, Greedy, Minimax, RandomMove, Strategy},
+    ai::{AlphaBeta, FirstMove, Greedy, Minimax, RandomMove, Strategy},
     GameState, Outcome, Player,
 };
 
@@ -10,7 +10,8 @@ fn main() {
         &mut FirstMove::default(),
         &mut Greedy::default(),
         &mut RandomMove::default(),
-        &mut Minimax::new(2),
+        &mut Minimax::new(4),
+        &mut AlphaBeta::new(4),
     ];
 
     let mut wins = vec![0; strats.len()];
