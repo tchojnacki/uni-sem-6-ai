@@ -27,7 +27,7 @@ fn main() {
         for wi in 0..strats.len() {
             let mut results = [0; 3];
             for _ in 0..ROUNDS {
-                let mut gs = GameState::othello_initial();
+                let mut gs = GameState::random_state_after(5);
 
                 while gs.outcome().is_none() {
                     let strat = &mut strats[match gs.turn() {

@@ -1,4 +1,5 @@
 use crate::{
+    ai::{RandomMove, Strategy},
     player::Player,
     position::{p, Position, BOARD_SIDE, BOARD_SQUARES},
     square::Square,
@@ -111,6 +112,20 @@ impl GameState {
             turn,
             board,
             moves: precompute_moves(turn, board),
+        }
+    }
+
+    pub fn random_state_after(n: u32) -> Self {
+        let mut strategy = RandomMove::default();
+        'outer: loop {
+            let mut gs = Self::othello_initial();
+            for _ in 0..n {
+                if gs.moves.is_empty() {
+                    continue 'outer;
+                }
+                gs = gs.make_move(strategy.decide(&gs));
+            }
+            return gs;
         }
     }
 
