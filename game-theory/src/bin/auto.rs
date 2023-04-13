@@ -45,5 +45,7 @@ fn main() {
         println!("{} Invalid board string! Aborting...", *CRITICAL);
         return;
     };
+    println!("{} Recognized game state:", *INFO);
+    print!("{gs}");
     verify_board(&gs);
 }
