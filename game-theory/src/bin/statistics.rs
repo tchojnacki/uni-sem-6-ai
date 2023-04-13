@@ -7,8 +7,6 @@ use std::{cmp::Ordering, collections::HashSet};
 const SAMPLE_SIZE: usize = 1_000_000;
 
 fn main() {
-    // TODO: calculate branching factor
-
     let mut strategy = RandomMove::default();
     let mut states = HashSet::new();
     states.insert(GameState::reversi_initial());
@@ -21,11 +19,14 @@ fn main() {
         }
     }
 
+    let mut total_branches = 0;
     let mut disc_counts_correct = 0;
     let mut occupied_parity_correct = 0;
     let mut round_distribution = [0; BOARD_SQUARES + 1];
     let mut outcome_distribution = [0; BOARD_SQUARES + 1];
     for gs in states.iter() {
+        total_branches += gs.moves().len();
+
         let occupied_squares = gs.occupied_squares().count();
 
         round_distribution[occupied_squares] += 1;
@@ -56,6 +57,10 @@ fn main() {
         }
     }
 
+    println!(
+        "Branching factor: {}",
+        total_branches as f64 / SAMPLE_SIZE as f64
+    );
     println!(
         "Disc counts: {}",
         disc_counts_correct as f64 / SAMPLE_SIZE as f64
