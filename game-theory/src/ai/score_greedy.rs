@@ -6,11 +6,11 @@ use std::{
     fmt::{self, Display},
 };
 
-pub struct Greedy {
+pub struct ScoreGreedy {
     rng: StdRng,
 }
 
-impl Default for Greedy {
+impl Default for ScoreGreedy {
     fn default() -> Self {
         Self {
             rng: SeedableRng::from_entropy(),
@@ -18,21 +18,14 @@ impl Default for Greedy {
     }
 }
 
-impl Display for Greedy {
+impl Display for ScoreGreedy {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, stringify!(Greedy))
+        write!(f, stringify!(ScoreGreedy))
     }
 }
 
-impl Strategy for Greedy {
+impl Strategy for ScoreGreedy {
     fn decide(&mut self, gs: &GameState) -> Position {
-        let valid_corners = Position::corners()
-            .filter(|&c| gs.moves().contains(&c))
-            .collect::<Vec<Position>>();
-        if !valid_corners.is_empty() {
-            return *valid_corners.choose(&mut self.rng).unwrap();
-        }
-
         let moves = gs.moves().to_vec();
         let mut best_score = gs.make_move(moves[0]).score_of(gs.turn());
         let mut best_moves = Vec::from([moves[0]]);

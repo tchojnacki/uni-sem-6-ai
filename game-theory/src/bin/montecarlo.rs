@@ -1,5 +1,8 @@
 use game_theory::{
-    ai::{AlphaBeta, FirstMove, Greedy, Heuristic, Minimax, RandomMove, Strategy, WEIGHTS_KORMAN},
+    ai::{
+        AlphaBeta, CornersGreedy, FirstMove, Heuristic, Minimax, RandomMove, ScoreGreedy, Strategy,
+        WEIGHTS_KORMAN, WEIGHTS_MAGGS, WEIGHTS_SANNIDHANAM,
+    },
     GameState, Outcome, Player,
 };
 
@@ -7,11 +10,15 @@ const ROUNDS: usize = 100;
 
 fn main() {
     let strats: &mut [&mut dyn Strategy] = &mut [
-        &mut FirstMove::default(),
-        &mut Greedy::default(),
         &mut RandomMove::default(),
+        &mut FirstMove::default(),
+        &mut ScoreGreedy::default(),
+        &mut CornersGreedy::default(),
         &mut Minimax::new(Heuristic::MaximumDisc, 3),
         &mut AlphaBeta::new(Heuristic::MaximumDisc, 3),
+        &mut AlphaBeta::new(Heuristic::MinimumDisc, 3),
+        &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_MAGGS)), 3),
+        &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_SANNIDHANAM)), 3),
         &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_KORMAN)), 3),
     ];
 
