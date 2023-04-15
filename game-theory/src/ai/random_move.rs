@@ -23,7 +23,6 @@ impl Display for RandomMove {
 
 impl Strategy for RandomMove {
     fn decide(&mut self, gs: &GameState) -> Position {
-        let moves = gs.moves().to_vec();
-        *moves.choose(&mut self.rng).unwrap()
+        *gs.moves().choose(&mut self.rng).unwrap()
     }
 }

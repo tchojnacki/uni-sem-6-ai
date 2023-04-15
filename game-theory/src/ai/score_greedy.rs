@@ -26,7 +26,7 @@ impl Display for ScoreGreedy {
 
 impl Strategy for ScoreGreedy {
     fn decide(&mut self, gs: &GameState) -> Position {
-        let moves = gs.moves().to_vec();
+        let moves = gs.moves();
         let mut best_score = gs.make_move(moves[0]).score_of(gs.turn());
         let mut best_moves = Vec::from([moves[0]]);
         for &position in moves.iter().skip(1) {

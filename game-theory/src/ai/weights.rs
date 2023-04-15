@@ -1,6 +1,16 @@
 use crate::BOARD_SQUARES;
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+};
 
 pub type WeightMatrix = [i32; BOARD_SQUARES];
+
+pub fn weights_hash(weights: &[i32]) -> u8 {
+    let mut hasher = DefaultHasher::new();
+    weights.hash(&mut hasher);
+    hasher.finish() as u8
+}
 
 #[rustfmt::skip]
 pub const WEIGHTS_MAGGS: WeightMatrix = [

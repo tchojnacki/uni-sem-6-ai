@@ -3,12 +3,21 @@ use crate::{Position, BOARD_SQUARES};
 pub type Bitboard = u64;
 
 pub const EMPTY: Bitboard = 0x0000000000000000;
-const FULL: Bitboard = 0xFFFFFFFFFFFFFFFF;
-const CENTER: Bitboard = 0x0000001818000000;
-pub const BLACK_START: Bitboard = 0x0000000810000000;
-pub const WHITE_START: Bitboard = 0x0000001008000000;
+pub const FULL: Bitboard = 0xFFFFFFFFFFFFFFFF;
+pub const CENTER: Bitboard = 0x0000001818000000;
+pub const CORNERS: Bitboard = 0x8100000000000081;
+pub const OTHELLO_BLACK_START: Bitboard = 0x0000000810000000;
+pub const OTHELLO_WHITE_START: Bitboard = 0x0000001008000000;
 
-pub fn bitboard_to_positions(mut bitboard: Bitboard) -> Vec<Position> {
+pub const fn square(position: Position) -> Bitboard {
+    1 << position.index()
+}
+
+pub const fn has(bitboard: Bitboard, position: Position) -> bool {
+    bitboard & square(position) != EMPTY
+}
+
+pub fn positions(mut bitboard: Bitboard) -> Vec<Position> {
     let mut result = Vec::with_capacity(BOARD_SQUARES);
     let mut i = 0;
     while bitboard != 0 {
@@ -30,8 +39,8 @@ pub const fn get_moves(current: Bitboard, opponent: Bitboard) -> Bitboard {
     }
 }
 
-pub fn do_move(position: Position, current: &mut Bitboard, opponent: &mut Bitboard) {
-    let position = square_at(position);
+pub fn make_move(position: Position, current: &mut Bitboard, opponent: &mut Bitboard) {
+    let position = square(position);
     if get_moves(*current, *opponent) & position == EMPTY {
         panic!("Invalid move!");
     }
@@ -42,8 +51,15 @@ pub fn do_move(position: Position, current: &mut Bitboard, opponent: &mut Bitboa
     *opponent ^= flipped;
 }
 
-pub const fn square_at(position: Position) -> Bitboard {
-    1 << position.index()
+pub const fn diagonals(position: Position) -> [Bitboard; 4] {
+    use dumb7fill::*;
+    let bb = square(position);
+    [
+        shift_nort(bb) | shift_sout(bb),
+        shift_noea(bb) | shift_sowe(bb),
+        shift_east(bb) | shift_west(bb),
+        shift_soea(bb) | shift_nowe(bb),
+    ]
 }
 
 const fn all_flipped(position: Bitboard, current: Bitboard, opponent: Bitboard) -> Bitboard {

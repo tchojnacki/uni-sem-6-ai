@@ -1,5 +1,8 @@
 use super::strategy::Strategy;
-use crate::{GameState, Position};
+use crate::{
+    bitboard::{positions, CORNERS, EMPTY},
+    GameState, Position,
+};
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use std::fmt::{self, Display};
 
@@ -23,15 +26,15 @@ impl Display for CornersGreedy {
 
 impl Strategy for CornersGreedy {
     fn decide(&mut self, gs: &GameState) -> Position {
-        let moves = gs.moves().to_vec();
-        let valid_corners = Position::corners()
-            .filter(|&c| moves.contains(&c))
-            .collect::<Vec<Position>>();
+        let valid_moves = gs.move_bitboard();
+        let valid_corners = valid_moves & CORNERS;
 
-        if valid_corners.is_empty() {
-            return *moves.choose(&mut self.rng).unwrap();
-        }
-
-        *valid_corners.choose(&mut self.rng).unwrap()
+        *positions(if valid_corners != EMPTY {
+            valid_corners
+        } else {
+            valid_moves
+        })
+        .choose(&mut self.rng)
+        .unwrap()
     }
 }

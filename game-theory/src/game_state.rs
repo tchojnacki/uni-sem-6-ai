@@ -1,8 +1,8 @@
 use crate::{
     ai::{RandomMove, Strategy},
     bitboard::{
-        bitboard_to_positions, do_move, get_moves, square_at, Bitboard, BLACK_START, EMPTY,
-        WHITE_START,
+        diagonals, get_moves, has, make_move, positions, square, Bitboard, EMPTY,
+        OTHELLO_BLACK_START, OTHELLO_WHITE_START,
     },
     player::Player,
     position::{Position, BOARD_SIDE, BOARD_SQUARES},
@@ -13,22 +13,11 @@ use crate::{
 use colored::Colorize;
 use std::{
     cmp::Ordering,
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     fmt::{self, Display},
     hash::Hash,
     time::{Duration, Instant},
 };
-
-const DIRECTIONS: [(i32, i32); 8] = [
-    (1, 0),
-    (1, 1),
-    (0, 1),
-    (-1, 1),
-    (-1, 0),
-    (-1, -1),
-    (0, -1),
-    (1, -1),
-];
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct GameState {
@@ -64,8 +53,8 @@ impl GameState {
     pub const fn othello_initial() -> Self {
         Self {
             turn: Player::Black,
-            black: BLACK_START,
-            white: WHITE_START,
+            black: OTHELLO_BLACK_START,
+            white: OTHELLO_WHITE_START,
         }
     }
 
@@ -85,10 +74,7 @@ impl GameState {
     }
 
     pub const fn at(&self, position: Position) -> Square {
-        match (
-            self.black & square_at(position) != EMPTY,
-            self.white & square_at(position) != EMPTY,
-        ) {
+        match (has(self.black, position), has(self.white, position)) {
             (false, false) => Square::Empty,
             (true, false) => Square::Placed(Player::Black),
             (false, true) => Square::Placed(Player::White),
@@ -107,12 +93,7 @@ impl GameState {
         }
     }
 
-    pub fn occupied_squares(&self) -> impl Iterator<Item = Position> + '_ {
-        // TODO
-        Position::all().filter(|&pos| matches!(self.at(pos), Square::Placed(_)))
-    }
-
-    const fn move_bitboard(&self) -> Bitboard {
+    pub const fn move_bitboard(&self) -> Bitboard {
         get_moves(
             self.bitboard(self.turn),
             self.bitboard(self.turn.opponent()),
@@ -120,7 +101,7 @@ impl GameState {
     }
 
     pub fn moves(&self) -> Vec<Position> {
-        bitboard_to_positions(self.move_bitboard())
+        positions(self.move_bitboard())
     }
 
     fn pass_if_required(&mut self) {
@@ -137,8 +118,8 @@ impl GameState {
     pub fn make_move(&self, position: Position) -> GameState {
         let mut next_state = (*self).clone();
         match self.turn {
-            Player::Black => do_move(position, &mut next_state.black, &mut next_state.white),
-            Player::White => do_move(position, &mut next_state.white, &mut next_state.black),
+            Player::Black => make_move(position, &mut next_state.black, &mut next_state.white),
+            Player::White => make_move(position, &mut next_state.white, &mut next_state.black),
         };
 
         next_state.turn = next_state.turn.opponent();
@@ -188,39 +169,26 @@ impl GameState {
         Some(result)
     }
 
-    fn original_discs(&self) -> HashMap<Position, Player> {
-        // TODO
-        let mut result = HashMap::new();
-        for position in self.occupied_squares() {
-            let mut is_original = true;
-            for dir in DIRECTIONS {
-                let opp = (-dir.0, -dir.1);
-                let in_dir = matches!(
-                    position.offset(dir).map(|p| self.at(p)),
-                    Some(Square::Placed(_))
-                );
-                let in_opp = matches!(
-                    position.offset(opp).map(|p| self.at(p)),
-                    Some(Square::Placed(_))
-                );
-                if in_dir && in_opp {
-                    is_original = false;
-                    break;
-                }
-            }
-            if is_original {
-                let Square::Placed(color) = self.at(position) else { unreachable!() };
-                result.insert(position, color);
+    fn original_discs(&self) -> (Bitboard, Bitboard) {
+        let mut black = EMPTY;
+        let mut white = EMPTY;
+        for position in positions(self.black | self.white) {
+            if !diagonals(position)
+                .into_iter()
+                .any(|diagonal| (diagonal & (self.black | self.white)).count_ones() == 2)
+            {
+                black |= self.black & square(position);
+                white |= self.white & square(position);
             }
         }
-        result
+        (black, white)
     }
 
     pub fn verify_reachability(&self, timeout: Duration) -> Option<bool> {
         let start_time = Instant::now();
 
-        let target_disc_set = self.occupied_squares().collect::<HashSet<Position>>();
-        let original_disc_map = self.original_discs();
+        let target_bitboard = self.black | self.white;
+        let (og_black, og_white) = self.original_discs();
 
         let mut stack = Vec::from([GameState::reversi_initial()]);
         let mut visited = HashSet::new();
@@ -234,13 +202,17 @@ impl GameState {
             }
 
             for position in current.moves() {
-                if !target_disc_set.contains(&position) {
+                if !has(target_bitboard, position) {
                     continue;
                 }
-                if let Some(&color) = original_disc_map.get(&position) {
-                    if color != current.turn {
-                        continue;
-                    }
+                match (
+                    has(og_black, position),
+                    has(og_white, position),
+                    current.turn,
+                ) {
+                    (false, true, Player::Black) | (true, false, Player::White) => continue,
+                    (true, true, _) => unreachable!(),
+                    _ => (),
                 }
                 let next = current.make_move(position);
                 if visited.contains(&next) {
@@ -257,11 +229,12 @@ impl GameState {
 
 impl Display for GameState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let moves = self.move_bitboard();
         for row in 0..BOARD_SIDE {
             for col in 0..BOARD_SIDE {
                 let position = Position::from_index(row * BOARD_SIDE + col);
                 let mut square_str = self.at(position).to_string();
-                if self.moves().contains(&position) {
+                if has(moves, position) {
                     square_str = strip_string(&square_str)
                         .color(VALID_FG)
                         .on_color(EMPTY_BG)
@@ -291,7 +264,7 @@ mod tests {
     use crate::position::p;
 
     fn assert_moves(gs: &GameState, expected: &[Position]) {
-        let mut moves = gs.moves().to_vec();
+        let mut moves = gs.moves();
         moves.sort_by_key(|p| p.index());
         assert_eq!(moves, expected);
     }
@@ -299,7 +272,7 @@ mod tests {
     #[test]
     fn reversi_earlygame() {
         let gs = GameState::reversi_initial();
-        assert_eq!(gs.occupied_squares().count(), 0);
+        assert_eq!(gs.black | gs.white, EMPTY);
         assert_moves(&gs, &[p("D4"), p("E4"), p("D5"), p("E5")]);
 
         let gs = gs.make_move(p("D5"));

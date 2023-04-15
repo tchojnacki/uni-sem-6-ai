@@ -1,13 +1,9 @@
 use super::{
     minimax::{MAX_PLAYER, MIN_PLAYER},
-    weights::WeightMatrix,
+    weights::{weights_hash, WeightMatrix},
 };
 use crate::{square::Square, GameState, Position};
-use std::{
-    collections::hash_map::DefaultHasher,
-    fmt::{self, Display},
-    hash::{Hash, Hasher},
-};
+use std::fmt::{self, Display};
 
 #[non_exhaustive]
 pub enum Heuristic {
@@ -54,10 +50,4 @@ impl Heuristic {
             }
         }
     }
-}
-
-fn weights_hash(weights: &[i32]) -> u8 {
-    let mut hasher = DefaultHasher::new();
-    weights.hash(&mut hasher);
-    hasher.finish() as u8
 }

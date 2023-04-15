@@ -13,8 +13,6 @@ impl Display for FirstMove {
 
 impl Strategy for FirstMove {
     fn decide(&mut self, gs: &GameState) -> Position {
-        let mut moves = gs.moves().to_vec();
-        moves.sort_by_key(|m| m.index());
-        moves[0]
+        *gs.moves().first().unwrap()
     }
 }
