@@ -59,7 +59,9 @@ impl GameState {
     }
 
     pub fn random_state_after(n: u32) -> Self {
-        // TODO: panic
+        if n > 60 {
+            panic!("Invalid round count!")
+        }
         let mut strategy = RandomMove::default();
         'outer: loop {
             let mut gs = Self::othello_initial();

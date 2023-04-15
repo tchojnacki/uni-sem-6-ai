@@ -1,5 +1,8 @@
 use colored::{ColoredString, Colorize};
-use game_theory::{strip_string, GameState, BOARD_SIDE, BOARD_SQUARES};
+use game_theory::{
+    ai::{AlphaBeta, Heuristic, Strategy},
+    strip_string, GameState, Player, BOARD_SIDE, BOARD_SQUARES,
+};
 use once_cell::sync::Lazy;
 use std::{io::stdin, time::Duration};
 
@@ -41,11 +44,23 @@ fn main() {
     }
 
     let gs = GameState::from_board_string_unverified(&board_str);
-    let Some(gs) = gs else {
+    let Some(mut gs) = gs else {
         println!("{} Invalid board string! Aborting...", *CRITICAL);
         return;
     };
     println!("{} Recognized game state:", *INFO);
     print!("{gs}");
     verify_board(&gs);
+
+    let mut black_strat = AlphaBeta::new(Heuristic::MaximumDisc, 8);
+    let mut white_strat = AlphaBeta::new(Heuristic::MinimumDisc, 8);
+    while gs.outcome().is_none() {
+        let position = match gs.turn() {
+            Player::Black => &mut black_strat,
+            Player::White => &mut white_strat,
+        }
+        .decide(&gs);
+        gs = gs.make_move(position);
+    }
+    println!("{}", gs);
 }
