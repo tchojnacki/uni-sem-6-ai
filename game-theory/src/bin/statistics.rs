@@ -34,11 +34,7 @@ fn main() {
             outcome_distribution[occupied_squares] += 1;
         }
 
-        let disc_counts_turn = match gs
-            .discs_of(Player::Black)
-            .count()
-            .cmp(&gs.discs_of(Player::White).count())
-        {
+        let disc_counts_turn = match gs.count_of(Player::Black).cmp(&gs.count_of(Player::White)) {
             Ordering::Less | Ordering::Equal => Player::Black,
             Ordering::Greater => Player::White,
         };

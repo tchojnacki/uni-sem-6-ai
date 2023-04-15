@@ -26,6 +26,14 @@ impl Position {
         Some(Position((row * BOARD_SIDE + col) as u8))
     }
 
+    pub fn from_index(index: usize) -> Position {
+        if index >= BOARD_SQUARES {
+            panic!("Invalid position index!")
+        }
+
+        Position(index as u8)
+    }
+
     pub fn all() -> impl Iterator<Item = Self> {
         (0..BOARD_SQUARES as u8).map(Position)
     }

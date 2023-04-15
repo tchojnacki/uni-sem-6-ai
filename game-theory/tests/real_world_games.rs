@@ -15,8 +15,8 @@ fn from_transcript(transcript: &'static str) -> GameState {
 
 fn assert_outcome(gs: &GameState, outcome: Outcome, black: usize, white: usize) {
     assert_eq!(gs.outcome(), Some(outcome));
-    assert_eq!(gs.discs_of(Player::Black).count(), black);
-    assert_eq!(gs.discs_of(Player::White).count(), white);
+    assert_eq!(gs.count_of(Player::Black), black);
+    assert_eq!(gs.count_of(Player::White), white);
 }
 
 #[test]

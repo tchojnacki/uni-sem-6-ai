@@ -1,4 +1,5 @@
 pub mod ai;
+pub mod bitboard;
 mod game_state;
 mod outcome;
 mod player;

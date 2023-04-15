@@ -14,12 +14,12 @@ fn main() {
         &mut FirstMove::default(),
         &mut ScoreGreedy::default(),
         &mut CornersGreedy::default(),
-        &mut Minimax::new(Heuristic::MaximumDisc, 3),
-        &mut AlphaBeta::new(Heuristic::MaximumDisc, 3),
-        &mut AlphaBeta::new(Heuristic::MinimumDisc, 3),
-        &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_MAGGS)), 3),
-        &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_SANNIDHANAM)), 3),
-        &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_KORMAN)), 3),
+        &mut Minimax::new(Heuristic::MaximumDisc, 4),
+        &mut AlphaBeta::new(Heuristic::MaximumDisc, 4),
+        &mut AlphaBeta::new(Heuristic::MinimumDisc, 4),
+        &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_MAGGS)), 4),
+        &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_SANNIDHANAM)), 4),
+        &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_KORMAN)), 4),
     ];
 
     let mut wins = vec![0; strats.len()];
