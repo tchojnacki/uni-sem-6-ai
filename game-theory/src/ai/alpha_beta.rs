@@ -45,8 +45,10 @@ impl AlphaBeta {
             let (mut max_eval, mut max_pos) = (f64::NEG_INFINITY, None);
             for position in gs.moves() {
                 let (eval, _) = self.alpha_beta(&gs.make_move(position), depth - 1, alpha, beta);
-                max_eval = max_eval.max(eval);
-                max_pos = Some(position);
+                if eval >= max_eval {
+                    max_eval = eval;
+                    max_pos = Some(position);
+                }
                 alpha = alpha.max(eval);
                 if beta <= alpha {
                     break;
@@ -57,8 +59,10 @@ impl AlphaBeta {
             let (mut min_eval, mut min_pos) = (f64::INFINITY, None);
             for position in gs.moves() {
                 let (eval, _) = self.alpha_beta(&gs.make_move(position), depth - 1, alpha, beta);
-                min_eval = min_eval.min(eval);
-                min_pos = Some(position);
+                if eval <= min_eval {
+                    min_eval = eval;
+                    min_pos = Some(position);
+                }
                 beta = beta.min(eval);
                 if beta <= alpha {
                     break;
