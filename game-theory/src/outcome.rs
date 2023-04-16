@@ -2,6 +2,7 @@ use crate::Player;
 use colored::Colorize;
 use std::fmt::{self, Display};
 
+#[must_use]
 #[derive(PartialEq, Eq, Debug)]
 pub enum Outcome {
     Winner(Player),

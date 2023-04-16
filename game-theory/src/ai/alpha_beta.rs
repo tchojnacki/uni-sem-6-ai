@@ -18,6 +18,7 @@ impl AlphaBeta {
         }
     }
 
+    #[must_use]
     fn alpha_beta(
         &self,
         gs: &GameState,

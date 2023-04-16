@@ -28,6 +28,7 @@ impl Display for Heuristic {
 }
 
 impl Heuristic {
+    #[must_use]
     pub fn evaluate(&self, gs: &GameState) -> f64 {
         match self {
             Heuristic::MaximumDisc => {

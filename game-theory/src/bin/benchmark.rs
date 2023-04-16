@@ -16,7 +16,7 @@ fn main() {
             }
             let position = strategy.decide(&gs);
             let before = Instant::now();
-            gs.make_move(position);
+            let _ = gs.make_move(position);
             total += before.elapsed();
             tries += 1;
         }

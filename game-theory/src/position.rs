@@ -6,6 +6,7 @@ pub const BOARD_SQUARES: usize = BOARD_SIDE.pow(2);
 const COL_NOTATION: &str = "ABCDEFGH";
 const ROW_NOTATION: &str = "12345678";
 
+#[must_use]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Position(u8);
 
@@ -14,6 +15,7 @@ pub fn p(notation: &'static str) -> Position {
 }
 
 impl Position {
+    #[must_use]
     pub fn from(notation: &str) -> Option<Self> {
         let mut chars = notation.chars();
         let col_char = chars.next()?;
@@ -49,10 +51,12 @@ impl Position {
         Position(36), // E5
     ];
 
+    #[must_use]
     pub const fn index(&self) -> usize {
         self.0 as usize
     }
 
+    #[must_use]
     pub const fn offset(&self, by: (i32, i32)) -> Option<Self> {
         let col = (self.index() % BOARD_SIDE) as i32 + by.0;
         let row = (self.index() / BOARD_SIDE) as i32 + by.1;

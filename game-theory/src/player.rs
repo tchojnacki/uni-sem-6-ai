@@ -1,6 +1,7 @@
 use colored::Colorize;
 use std::fmt::{self, Display};
 
+#[must_use]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Player {

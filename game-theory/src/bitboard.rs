@@ -9,14 +9,17 @@ pub const CORNERS: Bitboard = 0x8100000000000081;
 pub const OTHELLO_BLACK_START: Bitboard = 0x0000000810000000;
 pub const OTHELLO_WHITE_START: Bitboard = 0x0000001008000000;
 
+#[must_use]
 pub const fn square(position: Position) -> Bitboard {
     1 << position.index()
 }
 
+#[must_use]
 pub const fn has(bitboard: Bitboard, position: Position) -> bool {
     bitboard & square(position) != EMPTY
 }
 
+#[must_use]
 pub fn positions(mut bitboard: Bitboard) -> Vec<Position> {
     let mut result = Vec::with_capacity(BOARD_SQUARES);
     let mut i = 0;
@@ -30,6 +33,7 @@ pub fn positions(mut bitboard: Bitboard) -> Vec<Position> {
     result
 }
 
+#[must_use]
 pub const fn get_moves(current: Bitboard, opponent: Bitboard) -> Bitboard {
     let occupied = current | opponent;
     if occupied.count_ones() >= 4 {
@@ -51,6 +55,7 @@ pub fn make_move(position: Position, current: &mut Bitboard, opponent: &mut Bitb
     *opponent ^= flipped;
 }
 
+#[must_use]
 pub const fn diagonals(position: Position) -> [Bitboard; 4] {
     use dumb7fill::*;
     let bb = square(position);
@@ -62,6 +67,7 @@ pub const fn diagonals(position: Position) -> [Bitboard; 4] {
     ]
 }
 
+#[must_use]
 const fn all_flipped(position: Bitboard, current: Bitboard, opponent: Bitboard) -> Bitboard {
     use dumb7fill::*;
     fill_nort(position, opponent) & fill_sout(current, opponent)
@@ -74,6 +80,7 @@ const fn all_flipped(position: Bitboard, current: Bitboard, opponent: Bitboard) 
         | fill_nowe(position, opponent) & fill_soea(current, opponent)
 }
 
+#[must_use]
 const fn attack_fill(current: Bitboard, opponent: Bitboard) -> Bitboard {
     use dumb7fill::*;
     !(current | opponent)
@@ -107,6 +114,7 @@ mod dumb7fill {
     const NOT_A_FILE: Bitboard = 0xFEFEFEFEFEFEFEFE;
     const NOT_H_FILE: Bitboard = 0x7F7F7F7F7F7F7F7F;
 
+    #[must_use]
     const fn fill(mut gen: Bitboard, mut pro: Bitboard, dir: i32, mask: Bitboard) -> Bitboard {
         pro &= mask;
         gen = shift(gen, dir, pro);
@@ -123,38 +131,47 @@ mod dumb7fill {
         (result | gen) & mask
     }
 
+    #[must_use]
     pub const fn fill_east(gen: Bitboard, pro: Bitboard) -> Bitboard {
         fill(gen, pro, EAST, NOT_H_FILE)
     }
 
+    #[must_use]
     pub const fn fill_sout(gen: Bitboard, pro: Bitboard) -> Bitboard {
         fill(gen, pro, SOUT, FULL)
     }
 
+    #[must_use]
     pub const fn fill_west(gen: Bitboard, pro: Bitboard) -> Bitboard {
         fill(gen, pro, WEST, NOT_A_FILE)
     }
 
+    #[must_use]
     pub const fn fill_nort(gen: Bitboard, pro: Bitboard) -> Bitboard {
         fill(gen, pro, NORT, FULL)
     }
 
+    #[must_use]
     pub const fn fill_soea(gen: Bitboard, pro: Bitboard) -> Bitboard {
         fill(gen, pro, SOEA, NOT_H_FILE)
     }
 
+    #[must_use]
     pub const fn fill_sowe(gen: Bitboard, pro: Bitboard) -> Bitboard {
         fill(gen, pro, SOWE, NOT_A_FILE)
     }
 
+    #[must_use]
     pub const fn fill_nowe(gen: Bitboard, pro: Bitboard) -> Bitboard {
         fill(gen, pro, NOWE, NOT_A_FILE)
     }
 
+    #[must_use]
     pub const fn fill_noea(gen: Bitboard, pro: Bitboard) -> Bitboard {
         fill(gen, pro, NOEA, NOT_H_FILE)
     }
 
+    #[must_use]
     const fn shift(bitboard: Bitboard, by: i32, mask: Bitboard) -> Bitboard {
         mask & if by >= 0 {
             bitboard >> by
@@ -163,34 +180,42 @@ mod dumb7fill {
         }
     }
 
+    #[must_use]
     pub const fn shift_east(bb: Bitboard) -> Bitboard {
         shift(bb, EAST, NOT_H_FILE)
     }
 
+    #[must_use]
     pub const fn shift_sout(bb: Bitboard) -> Bitboard {
         shift(bb, SOUT, FULL)
     }
 
+    #[must_use]
     pub const fn shift_west(bb: Bitboard) -> Bitboard {
         shift(bb, WEST, NOT_A_FILE)
     }
 
+    #[must_use]
     pub const fn shift_nort(bb: Bitboard) -> Bitboard {
         shift(bb, NORT, FULL)
     }
 
+    #[must_use]
     pub const fn shift_soea(bb: Bitboard) -> Bitboard {
         shift(bb, SOEA, NOT_H_FILE)
     }
 
+    #[must_use]
     pub const fn shift_sowe(bb: Bitboard) -> Bitboard {
         shift(bb, SOWE, NOT_A_FILE)
     }
 
+    #[must_use]
     pub const fn shift_nowe(bb: Bitboard) -> Bitboard {
         shift(bb, NOWE, NOT_A_FILE)
     }
 
+    #[must_use]
     pub const fn shift_noea(bb: Bitboard) -> Bitboard {
         shift(bb, NOEA, NOT_H_FILE)
     }

@@ -42,6 +42,7 @@ pub const VALID_FG: Color = Color::TrueColor {
     b: 74,
 };
 
+#[must_use]
 pub fn strip_string(input: &str) -> String {
     let mut result = String::with_capacity(input.len());
     let mut chars = input.chars();

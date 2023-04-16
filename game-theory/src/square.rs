@@ -5,6 +5,7 @@ use crate::{
 use colored::Colorize;
 use std::fmt::{self, Display};
 
+#[must_use]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Square {
     Empty,

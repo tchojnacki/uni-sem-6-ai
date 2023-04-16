@@ -6,6 +6,7 @@ use std::{
 
 pub type WeightMatrix = [i32; BOARD_SQUARES];
 
+#[must_use]
 pub fn weights_hash(weights: &[i32]) -> u8 {
     let mut hasher = DefaultHasher::new();
     weights.hash(&mut hasher);

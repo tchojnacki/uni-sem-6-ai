@@ -19,6 +19,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[must_use]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct GameState {
     turn: Player,
@@ -31,6 +32,7 @@ impl GameState {
         self.turn
     }
 
+    #[must_use]
     const fn bitboard(&self, player: Player) -> Bitboard {
         match player {
             Player::Black => self.black,
@@ -38,6 +40,7 @@ impl GameState {
         }
     }
 
+    #[must_use]
     pub const fn count_of(&self, player: Player) -> usize {
         self.bitboard(player).count_ones() as usize
     }
@@ -84,6 +87,7 @@ impl GameState {
         }
     }
 
+    #[must_use]
     pub fn score_of(&self, player: Player) -> usize {
         match self.outcome() {
             Some(Outcome::Winner(p)) if p == player => {
@@ -95,6 +99,7 @@ impl GameState {
         }
     }
 
+    #[must_use]
     pub const fn move_bitboard(&self) -> Bitboard {
         get_moves(
             self.bitboard(self.turn),
@@ -102,6 +107,7 @@ impl GameState {
         )
     }
 
+    #[must_use]
     pub fn moves(&self) -> Vec<Position> {
         positions(self.move_bitboard())
     }
@@ -117,7 +123,7 @@ impl GameState {
         }
     }
 
-    pub fn make_move(&self, position: Position) -> GameState {
+    pub fn make_move(&self, position: Position) -> Self {
         let mut next_state = (*self).clone();
         match self.turn {
             Player::Black => make_move(position, &mut next_state.black, &mut next_state.white),
@@ -129,6 +135,7 @@ impl GameState {
         next_state
     }
 
+    #[must_use]
     pub fn outcome(&self) -> Option<Outcome> {
         if self.move_bitboard() != EMPTY {
             return None;
@@ -146,7 +153,8 @@ impl GameState {
         )
     }
 
-    pub fn from_board_string_unverified(board_str: &str) -> Option<GameState> {
+    #[must_use]
+    pub fn from_board_string_unverified(board_str: &str) -> Option<Self> {
         let board_str = strip_string(board_str);
         if board_str.len() != BOARD_SQUARES {
             return None;
@@ -171,6 +179,7 @@ impl GameState {
         Some(result)
     }
 
+    #[must_use]
     fn original_discs(&self) -> (Bitboard, Bitboard) {
         let mut black = EMPTY;
         let mut white = EMPTY;
@@ -186,6 +195,7 @@ impl GameState {
         (black, white)
     }
 
+    #[must_use]
     pub fn verify_reachability(&self, timeout: Duration) -> Option<bool> {
         let start_time = Instant::now();
 
@@ -313,6 +323,6 @@ mod tests {
     #[should_panic]
     fn invalid_moves_panic() {
         let gs = GameState::othello_initial();
-        gs.make_move(p("A1"));
+        let _ = gs.make_move(p("A1"));
     }
 }

@@ -18,6 +18,7 @@ impl Minimax {
         }
     }
 
+    #[must_use]
     fn minimax(&self, gs: &GameState, depth: u32) -> (f64, Option<Position>) {
         if let Some(outcome) = gs.outcome() {
             return (
