@@ -8,7 +8,7 @@ use game_theory::{
 use rand::{seq::SliceRandom, thread_rng};
 use std::iter::repeat;
 
-const ELO_K: f64 = 32.;
+const ELO_K: f64 = 30.;
 
 fn elo_probability(loser: i32, winner: i32) -> f64 {
     1. / (1. + 10f64.powf((loser as f64 - winner as f64) / 400.))
@@ -72,20 +72,20 @@ fn main() {
     println!("MINIMAX VS ALPHA-BETA");
     run_tournament(
         &mut [
-            &mut Minimax::new(Heuristic::MaximumDisc, 4),
-            &mut AlphaBeta::new(Heuristic::MaximumDisc, 4),
+            &mut Minimax::new(Heuristic::MaximumDisc, 3),
+            &mut AlphaBeta::new(Heuristic::MaximumDisc, 3),
         ],
-        100,
+        1000,
     );
 
     println!("WEIGHT MATRIX COMPARISON");
     run_tournament(
         &mut [
-            &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_MAGGS)), 4),
-            &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_SANNIDHANAM)), 4),
-            &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_KORMAN)), 4),
+            &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_MAGGS)), 3),
+            &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_SANNIDHANAM)), 3),
+            &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_KORMAN)), 3),
         ],
-        100,
+        1000,
     );
 
     println!("MAX DEPTH COMPARISON");
@@ -99,14 +99,28 @@ fn main() {
         500,
     );
 
+    println!("BASIC HEURISTICS");
+    run_tournament(
+        &mut [
+            &mut AlphaBeta::new(Heuristic::MaximumDisc, 3),
+            &mut AlphaBeta::new(Heuristic::MinimumDisc, 3),
+            &mut AlphaBeta::new(Heuristic::CornersOwned, 3),
+            &mut AlphaBeta::new(Heuristic::CornerCloseness, 3),
+            &mut AlphaBeta::new(Heuristic::Mobility, 3),
+            &mut AlphaBeta::new(Heuristic::FrontierDiscs, 3),
+            &mut AlphaBeta::new(Heuristic::Stability, 3),
+        ],
+        1000,
+    );
+
     println!("FULL TOURNAMENT");
     run_tournament(
         &mut [
+            &mut RandomMove::default(),
             &mut CornersGreedy::default(),
             &mut AlphaBeta::new(Heuristic::MaximumDisc, 4),
-            &mut AlphaBeta::new(Heuristic::MinimumDisc, 4),
-            &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_KORMAN)), 4),
+            &mut AlphaBeta::new(Heuristic::Korman, 4),
         ],
-        100,
+        1000,
     );
 }

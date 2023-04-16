@@ -41,8 +41,8 @@ impl GameState {
     }
 
     #[must_use]
-    pub const fn count_of(&self, player: Player) -> usize {
-        self.bitboard(player).count_ones() as usize
+    pub const fn score_of(&self, player: Player) -> u32 {
+        self.bitboard(player).count_ones()
     }
 
     pub const fn reversi_initial() -> Self {
@@ -84,18 +84,6 @@ impl GameState {
             (true, false) => Square::Placed(Player::Black),
             (false, true) => Square::Placed(Player::White),
             _ => unreachable!(),
-        }
-    }
-
-    #[must_use]
-    pub fn score_of(&self, player: Player) -> usize {
-        match self.outcome() {
-            Some(Outcome::Winner(p)) if p == player => {
-                // counting empty squares for the winner
-                BOARD_SQUARES - self.count_of(player.opponent())
-            }
-            Some(Outcome::Draw) => BOARD_SQUARES / 2,
-            Some(Outcome::Winner(_)) | None => self.count_of(player),
         }
     }
 
@@ -143,8 +131,8 @@ impl GameState {
 
         Some(
             match self
-                .count_of(Player::Black)
-                .cmp(&self.count_of(Player::White))
+                .score_of(Player::Black)
+                .cmp(&self.score_of(Player::White))
             {
                 Ordering::Less => Outcome::Winner(Player::White),
                 Ordering::Equal => Outcome::Draw,

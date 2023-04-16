@@ -68,6 +68,19 @@ pub const fn diagonals(position: Position) -> [Bitboard; 4] {
 }
 
 #[must_use]
+pub const fn neighbours(bb: Bitboard) -> Bitboard {
+    use dumb7fill::*;
+    shift_east(bb)
+        | shift_sout(bb)
+        | shift_west(bb)
+        | shift_nort(bb)
+        | shift_soea(bb)
+        | shift_sowe(bb)
+        | shift_nowe(bb)
+        | shift_noea(bb)
+}
+
+#[must_use]
 const fn all_flipped(position: Bitboard, current: Bitboard, opponent: Bitboard) -> Bitboard {
     use dumb7fill::*;
     fill_nort(position, opponent) & fill_sout(current, opponent)

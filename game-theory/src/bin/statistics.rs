@@ -27,13 +27,13 @@ fn main() {
     for gs in states.iter() {
         total_branches += gs.move_bitboard().count_ones();
 
-        let occupied_squares = gs.count_of(Player::Black) + gs.count_of(Player::White);
+        let occupied_squares = (gs.score_of(Player::Black) + gs.score_of(Player::White)) as usize;
         round_distribution[occupied_squares] += 1;
         if gs.outcome().is_some() {
             outcome_distribution[occupied_squares] += 1;
         }
 
-        let disc_counts_turn = match gs.count_of(Player::Black).cmp(&gs.count_of(Player::White)) {
+        let disc_counts_turn = match gs.score_of(Player::Black).cmp(&gs.score_of(Player::White)) {
             Ordering::Less | Ordering::Equal => Player::Black,
             Ordering::Greater => Player::White,
         };

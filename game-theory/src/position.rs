@@ -36,17 +36,6 @@ impl Position {
         Position(index as u8)
     }
 
-    pub fn corners() -> impl Iterator<Item = Self> {
-        [p("A1"), p("H1"), p("A8"), p("H8")].into_iter()
-    }
-
-    pub const CENTER_SQUARES: [Position; 4] = [
-        Position(27), // D4
-        Position(28), // E4
-        Position(35), // D5
-        Position(36), // E5
-    ];
-
     #[must_use]
     pub const fn index(&self) -> usize {
         self.0 as usize
