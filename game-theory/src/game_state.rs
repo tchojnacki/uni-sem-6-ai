@@ -11,6 +11,7 @@ use crate::{
     Outcome,
 };
 use colored::Colorize;
+use rand::{thread_rng, Rng};
 use std::{
     cmp::Ordering,
     collections::HashSet,
@@ -61,21 +62,20 @@ impl GameState {
         }
     }
 
-    pub fn random_state_after(n: u32) -> Self {
-        if n > 60 {
+    pub fn random_state_between(min_round: u32, max_round: u32) -> Self {
+        if min_round > max_round || max_round > BOARD_SQUARES as u32 {
             panic!("Invalid round count!")
         }
+        let n = thread_rng().gen_range(min_round..=max_round);
         let mut strategy = RandomMove::default();
-        'outer: loop {
-            let mut gs = Self::othello_initial();
-            for _ in 0..n {
-                if gs.move_bitboard() == EMPTY {
-                    continue 'outer;
-                }
-                gs = gs.make_move(strategy.decide(&gs));
+        let mut gs = Self::reversi_initial();
+        for _ in 0..n {
+            if gs.move_bitboard() == EMPTY {
+                return Self::random_state_between(min_round, max_round);
             }
-            return gs;
+            gs = gs.make_move(strategy.decide(&gs));
         }
+        gs
     }
 
     pub const fn at(&self, position: Position) -> Square {
