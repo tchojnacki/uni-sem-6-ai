@@ -36,10 +36,6 @@ impl Position {
         Position(index as u8)
     }
 
-    pub fn all() -> impl Iterator<Item = Self> {
-        (0..BOARD_SQUARES as u8).map(Position)
-    }
-
     pub fn corners() -> impl Iterator<Item = Self> {
         [p("A1"), p("H1"), p("A8"), p("H8")].into_iter()
     }
@@ -134,11 +130,6 @@ mod tests {
         test(p("C3"));
         test(p("H7"));
         test(p("D4"));
-    }
-
-    #[test]
-    fn all_returns_64_squares() {
-        assert_eq!(Position::all().count(), BOARD_SQUARES);
     }
 
     #[test]

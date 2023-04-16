@@ -33,7 +33,7 @@ impl GameState {
     }
 
     #[must_use]
-    const fn bitboard(&self, player: Player) -> Bitboard {
+    pub const fn bitboard(&self, player: Player) -> Bitboard {
         match player {
             Player::Black => self.black,
             Player::White => self.white,
