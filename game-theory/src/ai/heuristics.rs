@@ -42,16 +42,17 @@ pub enum Heuristic {
 
 impl Display for Heuristic {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use Heuristic::*;
         match self {
-            Heuristic::MaximumDisc => write!(f, "MaxD"),
-            Heuristic::MinimumDisc => write!(f, "MinD"),
-            Heuristic::Weighted(weights) => write!(f, "W{:03}", weights_hash(weights.as_ref())),
-            Heuristic::CornersOwned => write!(f, "CrOwn"),
-            Heuristic::CornerCloseness => write!(f, "CrClose"),
-            Heuristic::Mobility => write!(f, "Mob"),
-            Heuristic::FrontierDiscs => write!(f, "Front"),
-            Heuristic::Stability => write!(f, "Stab"),
-            Heuristic::Korman => write!(f, "KORMAN"),
+            MaximumDisc => write!(f, "MaxD"),
+            MinimumDisc => write!(f, "MinD"),
+            Weighted(weights) => write!(f, "W{:03}", weights_hash(weights.as_ref())),
+            CornersOwned => write!(f, "CrOwn"),
+            CornerCloseness => write!(f, "CrClose"),
+            Mobility => write!(f, "Mob"),
+            FrontierDiscs => write!(f, "Front"),
+            Stability => write!(f, "Stab"),
+            Korman => write!(f, "KORMAN"),
         }
     }
 }
