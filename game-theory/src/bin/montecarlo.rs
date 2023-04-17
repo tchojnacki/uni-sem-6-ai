@@ -73,9 +73,10 @@ fn run_tournament(name: &str, strats: &mut [&mut dyn Strategy], timeout: Duratio
     let mut indices = (0..strats.len()).collect::<Vec<_>>();
     indices.sort_by_key(|i| -ratings[*i]);
 
-    for i in indices {
+    for (num, i) in indices.into_iter().enumerate() {
         println!(
-            "{:^25} {:>4} MMR, {:>4.1}% WR",
+            "{:>2}. {:^25} {:>4} MMR, {:>4.1}% WR",
+            num + 1,
             strats[i].to_string(),
             ratings[i],
             100. * wins[i] as f64 / games[i] as f64
@@ -92,14 +93,14 @@ fn main() {
             &mut ScoreGreedy::default(),
             &mut CornersGreedy::default(),
         ],
-        Duration::from_secs(1),
+        Duration::from_secs(5),
     );
 
     run_tournament(
         "MINIMAX VS ALPHA-BETA",
         &mut [
-            &mut Minimax::new(Heuristic::MaximumDisc, 4),
-            &mut AlphaBeta::new(Heuristic::MaximumDisc, 4),
+            &mut Minimax::new(Heuristic::MaximumDisc, 3),
+            &mut AlphaBeta::new(Heuristic::MaximumDisc, 3),
         ],
         Duration::from_secs(10),
     );
@@ -122,21 +123,20 @@ fn main() {
             &mut AlphaBeta::new(Heuristic::Korman, 3),
             &mut AlphaBeta::new(Heuristic::Korman, 4),
             &mut AlphaBeta::new(Heuristic::Korman, 5),
-            &mut AlphaBeta::new(Heuristic::Korman, 6),
         ],
-        Duration::from_secs(10),
+        Duration::from_secs(30),
     );
 
     run_tournament(
         "BASIC HEURISTICS",
         &mut [
-            &mut AlphaBeta::new(Heuristic::MaximumDisc, 5),
-            &mut AlphaBeta::new(Heuristic::MinimumDisc, 5),
-            &mut AlphaBeta::new(Heuristic::CornersOwned, 5),
-            &mut AlphaBeta::new(Heuristic::CornerCloseness, 5),
-            &mut AlphaBeta::new(Heuristic::Mobility, 5),
-            &mut AlphaBeta::new(Heuristic::FrontierDiscs, 5),
-            &mut AlphaBeta::new(Heuristic::Stability, 5),
+            &mut AlphaBeta::new(Heuristic::MaximumDisc, 4),
+            &mut AlphaBeta::new(Heuristic::MinimumDisc, 4),
+            &mut AlphaBeta::new(Heuristic::CornersOwned, 4),
+            &mut AlphaBeta::new(Heuristic::CornerCloseness, 4),
+            &mut AlphaBeta::new(Heuristic::Mobility, 4),
+            &mut AlphaBeta::new(Heuristic::FrontierDiscs, 4),
+            &mut AlphaBeta::new(Heuristic::Stability, 4),
         ],
         Duration::from_secs(10),
     );
@@ -145,12 +145,13 @@ fn main() {
         "FULL TOURNAMENT",
         &mut [
             &mut RandomMove::default(),
+            &mut ScoreGreedy::default(),
             &mut CornersGreedy::default(),
-            &mut AlphaBeta::new(Heuristic::MaximumDisc, 6),
-            &mut AlphaBeta::new(Heuristic::CornersOwned, 6),
-            &mut AlphaBeta::new(Heuristic::CornerCloseness, 6),
-            &mut AlphaBeta::new(Heuristic::Mobility, 6),
-            &mut AlphaBeta::new(Heuristic::Korman, 6),
+            &mut AlphaBeta::new(Heuristic::MaximumDisc, 4),
+            &mut AlphaBeta::new(Heuristic::CornersOwned, 4),
+            &mut AlphaBeta::new(Heuristic::CornerCloseness, 4),
+            &mut AlphaBeta::new(Heuristic::Mobility, 4),
+            &mut AlphaBeta::new(Heuristic::Korman, 4),
         ],
         Duration::from_secs(60),
     );
