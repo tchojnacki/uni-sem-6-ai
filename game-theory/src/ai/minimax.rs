@@ -66,7 +66,7 @@ impl Display for Minimax {
 }
 
 impl Strategy for Minimax {
-    fn decide(&mut self, gs: &GameState) -> crate::Position {
+    fn decide(&self, gs: &GameState) -> crate::Position {
         let (_, pos) = self.minimax(gs, self.max_depth);
         pos.unwrap()
     }

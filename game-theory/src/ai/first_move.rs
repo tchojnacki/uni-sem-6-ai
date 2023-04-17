@@ -12,7 +12,7 @@ impl Display for FirstMove {
 }
 
 impl Strategy for FirstMove {
-    fn decide(&mut self, gs: &GameState) -> Position {
+    fn decide(&self, gs: &GameState) -> Position {
         *gs.moves().first().unwrap()
     }
 }

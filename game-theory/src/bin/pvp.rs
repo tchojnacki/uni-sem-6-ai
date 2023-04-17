@@ -5,7 +5,7 @@ use game_theory::{
 
 fn main() {
     let mut gs = GameState::othello_initial();
-    let mut strategy = PlayerInput::default();
+    let strategy = PlayerInput::default();
     print!("{}", gs);
     while gs.outcome().is_none() {
         let position = strategy.decide(&gs);

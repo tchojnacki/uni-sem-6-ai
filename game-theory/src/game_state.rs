@@ -67,7 +67,7 @@ impl GameState {
             panic!("Invalid round count!")
         }
         let n = thread_rng().gen_range(min_round..=max_round);
-        let mut strategy = RandomMove::default();
+        let strategy = RandomMove::default();
         let mut gs = Self::reversi_initial();
         for _ in 0..n {
             if gs.move_bitboard() == EMPTY {

@@ -1,19 +1,10 @@
 use super::strategy::Strategy;
 use crate::{GameState, Position};
-use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
+use rand::{seq::SliceRandom, thread_rng};
 use std::fmt::{self, Display};
 
-pub struct RandomMove {
-    rng: StdRng,
-}
-
-impl Default for RandomMove {
-    fn default() -> Self {
-        Self {
-            rng: SeedableRng::from_entropy(),
-        }
-    }
-}
+#[derive(Default)]
+pub struct RandomMove;
 
 impl Display for RandomMove {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -22,7 +13,7 @@ impl Display for RandomMove {
 }
 
 impl Strategy for RandomMove {
-    fn decide(&mut self, gs: &GameState) -> Position {
-        *gs.moves().choose(&mut self.rng).unwrap()
+    fn decide(&self, gs: &GameState) -> Position {
+        *gs.moves().choose(&mut thread_rng()).unwrap()
     }
 }

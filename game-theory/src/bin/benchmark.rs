@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 fn main() {
     let mut total = Duration::ZERO;
     let mut tries = 0;
-    let mut strategy = RandomMove::default();
+    let strategy = RandomMove::default();
     for _ in 0..1000 {
         for n in 0..=63 {
             let gs = GameState::random_state_between(n, n);

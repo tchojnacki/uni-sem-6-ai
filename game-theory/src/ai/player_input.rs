@@ -15,7 +15,7 @@ impl Display for PlayerInput {
 }
 
 impl Strategy for PlayerInput {
-    fn decide(&mut self, gs: &GameState) -> Position {
+    fn decide(&self, gs: &GameState) -> Position {
         loop {
             print!("Position: ");
             stdout().flush().unwrap();

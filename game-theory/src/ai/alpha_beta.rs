@@ -80,7 +80,7 @@ impl Display for AlphaBeta {
 }
 
 impl Strategy for AlphaBeta {
-    fn decide(&mut self, gs: &GameState) -> crate::Position {
+    fn decide(&self, gs: &GameState) -> crate::Position {
         let (_, pos) = self.alpha_beta(gs, self.max_depth, f64::NEG_INFINITY, f64::INFINITY);
         pos.unwrap()
     }

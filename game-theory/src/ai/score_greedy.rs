@@ -1,22 +1,13 @@
 use super::strategy::Strategy;
 use crate::{GameState, Position};
-use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
+use rand::{seq::SliceRandom, thread_rng};
 use std::{
     cmp::Ordering,
     fmt::{self, Display},
 };
 
-pub struct ScoreGreedy {
-    rng: StdRng,
-}
-
-impl Default for ScoreGreedy {
-    fn default() -> Self {
-        Self {
-            rng: SeedableRng::from_entropy(),
-        }
-    }
-}
+#[derive(Default)]
+pub struct ScoreGreedy;
 
 impl Display for ScoreGreedy {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -25,7 +16,7 @@ impl Display for ScoreGreedy {
 }
 
 impl Strategy for ScoreGreedy {
-    fn decide(&mut self, gs: &GameState) -> Position {
+    fn decide(&self, gs: &GameState) -> Position {
         let moves = gs.moves();
         let mut best_score = gs.make_move(moves[0]).score_of(gs.turn());
         let mut best_moves = Vec::from([moves[0]]);
@@ -41,6 +32,6 @@ impl Strategy for ScoreGreedy {
                 }
             };
         }
-        *best_moves.choose(&mut self.rng).unwrap()
+        *best_moves.choose(&mut thread_rng()).unwrap()
     }
 }

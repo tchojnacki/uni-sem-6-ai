@@ -7,7 +7,7 @@ use std::{cmp::Ordering, collections::HashSet};
 const SAMPLE_SIZE: usize = 1_000_000;
 
 fn main() {
-    let mut strategy = RandomMove::default();
+    let strategy = RandomMove::default();
     let mut states = HashSet::new();
     states.insert(GameState::reversi_initial());
 

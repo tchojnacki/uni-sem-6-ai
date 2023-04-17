@@ -6,9 +6,12 @@ use game_theory::{
     },
     GameState, Outcome, Player,
 };
-use indicatif::ProgressBar;
 use rand::{thread_rng, Rng};
-use std::time::{Duration, Instant};
+use std::{
+    sync::{mpsc::channel, Arc},
+    thread::{available_parallelism, scope},
+    time::{Duration, Instant},
+};
 
 const ELO_K: f64 = 32.;
 
@@ -23,33 +26,50 @@ fn elo_update(ratings: &mut [i32], wi: usize, li: usize) {
     ratings[li] += (-pl * ELO_K) as i32;
 }
 
-fn run_tournament(name: &str, strats: &mut [&mut dyn Strategy], timeout: Duration) {
-    let mut ratings = vec![1000; strats.len()];
-    let mut games = vec![0; strats.len()];
-    let mut wins = vec![0; strats.len()];
-    let mut total_games = 0;
+fn run_tournament(name: &str, strats: &[&dyn Strategy], timeout: Duration) {
+    let strat_count = strats.len();
+    let strats = Arc::new(strats);
 
     println!("{}", name.bright_blue().bold());
-    let pb = ProgressBar::new(timeout.as_millis() as u64);
     let start = Instant::now();
-    while start.elapsed() <= timeout {
-        let bi = thread_rng().gen_range(0..strats.len());
-        let wi = thread_rng().gen_range(0..strats.len());
-        let mut gs = GameState::random_state_between(6, 8);
-        if gs.outcome().is_some() || bi == wi {
-            continue;
-        }
 
-        while gs.outcome().is_none() {
-            let strat = &mut strats[match gs.turn() {
-                Player::Black => bi,
-                Player::White => wi,
-            }];
-            let position = strat.decide(&gs);
-            gs = gs.make_move(position);
-        }
+    let (tx, rx) = channel();
+    scope(|s| {
+        let threads = available_parallelism().map(|n| n.get()).unwrap_or(1);
+        for _ in 0..threads {
+            let tx = tx.clone();
+            let strats = strats.clone();
+            s.spawn(move || {
+                while start.elapsed() <= timeout {
+                    let bi = thread_rng().gen_range(0..strat_count);
+                    let wi = thread_rng().gen_range(0..strat_count);
+                    let mut gs = GameState::random_state_between(6, 8);
+                    if gs.outcome().is_some() || bi == wi {
+                        continue;
+                    }
 
-        if let Outcome::Winner(winner) = gs.outcome().unwrap() {
+                    while gs.outcome().is_none() {
+                        let strat = match gs.turn() {
+                            Player::Black => strats[bi],
+                            Player::White => strats[wi],
+                        };
+                        let position = strat.decide(&gs);
+                        gs = gs.make_move(position);
+                    }
+
+                    tx.send((bi, wi, gs.outcome().unwrap())).unwrap();
+                }
+            });
+        }
+    });
+    drop(tx);
+
+    let mut ratings = vec![1000; strat_count];
+    let mut games = vec![0; strat_count];
+    let mut wins = vec![0; strat_count];
+    let mut total_games = 0;
+    while let Ok((bi, wi, outcome)) = rx.recv() {
+        if let Outcome::Winner(winner) = outcome {
             match winner {
                 Player::Black => {
                     elo_update(&mut ratings, bi, wi);
@@ -63,16 +83,13 @@ fn run_tournament(name: &str, strats: &mut [&mut dyn Strategy], timeout: Duratio
             games[bi] += 1;
             games[wi] += 1;
         }
-
         total_games += 1;
-        pb.set_position(start.elapsed().as_millis() as u64);
     }
-    pb.finish_and_clear();
+
     println!("Played {total_games} games!");
 
-    let mut indices = (0..strats.len()).collect::<Vec<_>>();
+    let mut indices = (0..strat_count).collect::<Vec<_>>();
     indices.sort_by_key(|i| -ratings[*i]);
-
     for (num, i) in indices.into_iter().enumerate() {
         println!(
             "{:>2}. {:^25} {:>4} MMR, {:>4.1}% WR",
@@ -87,72 +104,72 @@ fn run_tournament(name: &str, strats: &mut [&mut dyn Strategy], timeout: Duratio
 fn main() {
     run_tournament(
         "NAIVE STRATEGIES",
-        &mut [
-            &mut RandomMove::default(),
-            &mut FirstMove::default(),
-            &mut ScoreGreedy::default(),
-            &mut CornersGreedy::default(),
+        &[
+            &RandomMove::default(),
+            &FirstMove::default(),
+            &ScoreGreedy::default(),
+            &CornersGreedy::default(),
         ],
         Duration::from_secs(5),
     );
 
     run_tournament(
         "MINIMAX VS ALPHA-BETA",
-        &mut [
-            &mut Minimax::new(Heuristic::MaximumDisc, 3),
-            &mut AlphaBeta::new(Heuristic::MaximumDisc, 3),
+        &[
+            &Minimax::new(Heuristic::MaximumDisc, 3),
+            &AlphaBeta::new(Heuristic::MaximumDisc, 3),
         ],
         Duration::from_secs(10),
     );
 
     run_tournament(
         "WEIGHT MATRIX COMPARISON",
-        &mut [
-            &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_MAGGS)), 4),
-            &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_SANNIDHANAM)), 4),
-            &mut AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_KORMAN)), 4),
+        &[
+            &AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_MAGGS)), 4),
+            &AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_SANNIDHANAM)), 4),
+            &AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_KORMAN)), 4),
         ],
         Duration::from_secs(10),
     );
 
     run_tournament(
         "MAX DEPTH COMPARISON",
-        &mut [
-            &mut AlphaBeta::new(Heuristic::Korman, 1),
-            &mut AlphaBeta::new(Heuristic::Korman, 2),
-            &mut AlphaBeta::new(Heuristic::Korman, 3),
-            &mut AlphaBeta::new(Heuristic::Korman, 4),
-            &mut AlphaBeta::new(Heuristic::Korman, 5),
+        &[
+            &AlphaBeta::new(Heuristic::Korman, 1),
+            &AlphaBeta::new(Heuristic::Korman, 2),
+            &AlphaBeta::new(Heuristic::Korman, 3),
+            &AlphaBeta::new(Heuristic::Korman, 4),
+            &AlphaBeta::new(Heuristic::Korman, 5),
         ],
         Duration::from_secs(30),
     );
 
     run_tournament(
         "BASIC HEURISTICS",
-        &mut [
-            &mut AlphaBeta::new(Heuristic::MaximumDisc, 4),
-            &mut AlphaBeta::new(Heuristic::MinimumDisc, 4),
-            &mut AlphaBeta::new(Heuristic::CornersOwned, 4),
-            &mut AlphaBeta::new(Heuristic::CornerCloseness, 4),
-            &mut AlphaBeta::new(Heuristic::Mobility, 4),
-            &mut AlphaBeta::new(Heuristic::FrontierDiscs, 4),
-            &mut AlphaBeta::new(Heuristic::Stability, 4),
+        &[
+            &AlphaBeta::new(Heuristic::MaximumDisc, 4),
+            &AlphaBeta::new(Heuristic::MinimumDisc, 4),
+            &AlphaBeta::new(Heuristic::CornersOwned, 4),
+            &AlphaBeta::new(Heuristic::CornerCloseness, 4),
+            &AlphaBeta::new(Heuristic::Mobility, 4),
+            &AlphaBeta::new(Heuristic::FrontierDiscs, 4),
+            &AlphaBeta::new(Heuristic::Stability, 4),
         ],
         Duration::from_secs(10),
     );
 
     run_tournament(
         "FULL TOURNAMENT",
-        &mut [
-            &mut RandomMove::default(),
-            &mut ScoreGreedy::default(),
-            &mut CornersGreedy::default(),
-            &mut AlphaBeta::new(Heuristic::MaximumDisc, 4),
-            &mut AlphaBeta::new(Heuristic::CornersOwned, 4),
-            &mut AlphaBeta::new(Heuristic::CornerCloseness, 4),
-            &mut AlphaBeta::new(Heuristic::Mobility, 4),
-            &mut AlphaBeta::new(Heuristic::Korman, 4),
+        &[
+            &RandomMove::default(),
+            &ScoreGreedy::default(),
+            &CornersGreedy::default(),
+            &AlphaBeta::new(Heuristic::MaximumDisc, 4),
+            &AlphaBeta::new(Heuristic::CornersOwned, 4),
+            &AlphaBeta::new(Heuristic::CornerCloseness, 4),
+            &AlphaBeta::new(Heuristic::Mobility, 4),
+            &AlphaBeta::new(Heuristic::Korman, 4),
         ],
-        Duration::from_secs(60),
+        Duration::from_secs(300),
     );
 }
