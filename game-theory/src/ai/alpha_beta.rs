@@ -3,7 +3,10 @@ use super::{
     Heuristic, Strategy,
 };
 use crate::{GameState, Outcome, Position};
-use std::fmt::{self, Display};
+use std::{
+    cmp::Ordering,
+    fmt::{self, Display},
+};
 
 pub struct AlphaBeta {
     heuristic: Heuristic,
@@ -41,35 +44,29 @@ impl AlphaBeta {
             return (self.heuristic.evaluate(gs), None);
         }
 
-        if gs.turn() == MAX_PLAYER {
-            let (mut max_eval, mut max_pos) = (f64::NEG_INFINITY, None);
-            for position in gs.moves() {
-                let (eval, _) = self.alpha_beta(&gs.make_move(position), depth - 1, alpha, beta);
-                if eval >= max_eval {
-                    max_eval = eval;
-                    max_pos = Some(position);
-                }
-                alpha = alpha.max(eval);
-                if beta <= alpha {
-                    break;
-                }
+        let mut moves = gs.moves();
+        let mut best_pos = moves.pop().unwrap();
+        let (mut best_eval, _) = self.alpha_beta(&gs.make_move(best_pos), depth - 1, alpha, beta);
+        for position in moves {
+            let (eval, _) = self.alpha_beta(&gs.make_move(position), depth - 1, alpha, beta);
+            if matches!(
+                (gs.turn(), eval.partial_cmp(&best_eval).unwrap()),
+                (MAX_PLAYER, Ordering::Greater) | (MIN_PLAYER, Ordering::Less),
+            ) {
+                best_eval = eval;
+                best_pos = position;
             }
-            (max_eval, max_pos)
-        } else {
-            let (mut min_eval, mut min_pos) = (f64::INFINITY, None);
-            for position in gs.moves() {
-                let (eval, _) = self.alpha_beta(&gs.make_move(position), depth - 1, alpha, beta);
-                if eval <= min_eval {
-                    min_eval = eval;
-                    min_pos = Some(position);
-                }
-                beta = beta.min(eval);
-                if beta <= alpha {
-                    break;
-                }
+
+            // Alpha-beta pruning
+            match gs.turn() {
+                MAX_PLAYER => alpha = alpha.max(eval),
+                MIN_PLAYER => beta = beta.min(eval),
             }
-            (min_eval, min_pos)
+            if beta <= alpha {
+                break;
+            }
         }
+        (best_eval, Some(best_pos))
     }
 }
 

@@ -1,6 +1,9 @@
 use super::{heuristics::Heuristic, Strategy};
 use crate::{GameState, Outcome, Player, Position};
-use std::fmt::{self, Display};
+use std::{
+    cmp::Ordering,
+    fmt::{self, Display},
+};
 
 pub const MAX_PLAYER: Player = Player::Black;
 pub const MIN_PLAYER: Player = Player::White;
@@ -35,27 +38,20 @@ impl Minimax {
             return (self.heuristic.evaluate(gs), None);
         }
 
-        if gs.turn() == MAX_PLAYER {
-            let (mut max_eval, mut max_pos) = (f64::NEG_INFINITY, None);
-            for position in gs.moves() {
-                let (eval, _) = self.minimax(&gs.make_move(position), depth - 1);
-                if eval >= max_eval {
-                    max_eval = eval;
-                    max_pos = Some(position);
-                }
+        let mut moves = gs.moves();
+        let mut best_pos = moves.pop().unwrap();
+        let (mut best_eval, _) = self.minimax(&gs.make_move(best_pos), depth - 1);
+        for position in moves {
+            let (eval, _) = self.minimax(&gs.make_move(position), depth - 1);
+            if matches!(
+                (gs.turn(), eval.partial_cmp(&best_eval).unwrap()),
+                (MAX_PLAYER, Ordering::Greater) | (MIN_PLAYER, Ordering::Less),
+            ) {
+                best_eval = eval;
+                best_pos = position;
             }
-            (max_eval, max_pos)
-        } else {
-            let (mut min_eval, mut min_pos) = (f64::INFINITY, None);
-            for position in gs.moves() {
-                let (eval, _) = self.minimax(&gs.make_move(position), depth - 1);
-                if eval <= min_eval {
-                    min_eval = eval;
-                    min_pos = Some(position);
-                }
-            }
-            (min_eval, min_pos)
         }
+        (best_eval, Some(best_pos))
     }
 }
 
