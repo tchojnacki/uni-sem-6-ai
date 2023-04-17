@@ -1,6 +1,6 @@
 use super::{
     minimax::{MAX_PLAYER, MIN_PLAYER},
-    weights::{weights_hash, WeightMatrix, WEIGHTS_KORMAN},
+    weights::{WeightMatrix, WEIGHTS_KORMAN, WEIGHTS_MAGGS, WEIGHTS_SANNIDHANAM},
 };
 use crate::{
     bitboard::{get_moves, neighbours, positions, square, CORNERS},
@@ -20,7 +20,7 @@ pub enum Heuristic {
     MinimumDisc,
     /// - First mention: Maggs 1979
     /// - AKA: d, disk squares, weighted square, static heuristic
-    Weighted(Box<WeightMatrix>),
+    Weighted(&'static str, &'static WeightMatrix),
     /// - First mention: TODO
     /// - AKA: c, corner occupancy, corners
     CornersOwned,
@@ -46,7 +46,7 @@ impl Display for Heuristic {
         match self {
             MaximumDisc => write!(f, "MaxD"),
             MinimumDisc => write!(f, "MinD"),
-            Weighted(weights) => write!(f, "W{:03}", weights_hash(weights.as_ref())),
+            Weighted(name, _) => write!(f, "W({name})"),
             CornersOwned => write!(f, "CrOwn"),
             CornerCloseness => write!(f, "CrClose"),
             Mobility => write!(f, "Mob"),
@@ -58,6 +58,10 @@ impl Display for Heuristic {
 }
 
 impl Heuristic {
+    pub const W_MAGGS: Heuristic = Heuristic::Weighted("MAGGS", &WEIGHTS_MAGGS);
+    pub const W_SANNIDHANAM: Heuristic = Heuristic::Weighted("SANNIDHANAM", &WEIGHTS_SANNIDHANAM);
+    pub const W_KORMAN: Heuristic = Heuristic::Weighted("KORMAN", &WEIGHTS_KORMAN);
+
     #[must_use]
     pub fn evaluate(&self, gs: &GameState) -> f64 {
         use Heuristic::*;
@@ -66,7 +70,7 @@ impl Heuristic {
         match self {
             MaximumDisc => Self::ratio(gs.score_of(MAX_PLAYER), gs.score_of(MIN_PLAYER)),
             MinimumDisc => -&MaximumDisc.evaluate(gs),
-            Weighted(weights) => {
+            Weighted(_, weights) => {
                 let mut total = 0.;
                 for i in 0..BOARD_SQUARES {
                     total += ((max_bb & 1) as f64 - (min_bb & 1) as f64) * weights[i] as f64;
@@ -113,7 +117,7 @@ impl Heuristic {
                         (382.026, CornerCloseness),
                         (78.922, Mobility),
                         (10., MaximumDisc),
-                        (0.1, Weighted(Box::new(WEIGHTS_KORMAN))),
+                        (0.1, Self::W_KORMAN),
                         (74.396, FrontierDiscs),
                         (100., Stability),
                     ],

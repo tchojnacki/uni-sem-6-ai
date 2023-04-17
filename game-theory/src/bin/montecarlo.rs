@@ -1,7 +1,6 @@
 use colored::Colorize;
 use game_theory::{
     ai::{
-        weights::{WEIGHTS_KORMAN, WEIGHTS_MAGGS, WEIGHTS_SANNIDHANAM},
         AlphaBeta, CornersGreedy, FirstMove, Heuristic, Minimax, RandomMove, ScoreGreedy, Strategy,
     },
     GameState, Outcome, Player,
@@ -125,9 +124,9 @@ fn main() {
     run_tournament(
         "WEIGHT MATRIX COMPARISON",
         &[
-            &AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_MAGGS)), 4),
-            &AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_SANNIDHANAM)), 4),
-            &AlphaBeta::new(Heuristic::Weighted(Box::new(WEIGHTS_KORMAN)), 4),
+            &AlphaBeta::new(Heuristic::W_MAGGS, 4),
+            &AlphaBeta::new(Heuristic::W_SANNIDHANAM, 4),
+            &AlphaBeta::new(Heuristic::W_KORMAN, 4),
         ],
         Duration::from_secs(10),
     );

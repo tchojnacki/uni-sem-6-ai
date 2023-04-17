@@ -7,7 +7,7 @@ mod player_input;
 mod random_move;
 mod score_greedy;
 mod strategy;
-pub mod weights;
+mod weights;
 
 pub use alpha_beta::AlphaBeta;
 pub use corners_greedy::CornersGreedy;
