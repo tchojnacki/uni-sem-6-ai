@@ -3,11 +3,15 @@ use super::{
     weights::{WeightMatrix, WEIGHTS_KORMAN, WEIGHTS_MAGGS, WEIGHTS_SANNIDHANAM},
 };
 use crate::{
-    bitboard::{neighbours, positions, potential_moves, square, valid_moves, CORNERS},
-    GameState, BOARD_SQUARES,
+    bitboard::{
+        diagonals, has, neighbours, positions, potential_moves, square, valid_moves, Bitboard,
+        CORNERS, EDGES, EMPTY, INTERNAL,
+    },
+    GameState, Player, BOARD_SQUARES,
 };
 use std::{
     cmp::Ordering,
+    collections::HashSet,
     fmt::{self, Display},
 };
 
@@ -118,12 +122,18 @@ impl Heuristic {
                 )
             }
             InternalStability => {
-                // TODO
-                0.
+                let stable = stable_bb(gs) & INTERNAL;
+                Self::ratio(
+                    (stable & max_bb).count_ones(),
+                    (stable & min_bb).count_ones(),
+                )
             }
             EdgeStability => {
-                // TODO
-                0.
+                let stable = stable_bb(gs) & EDGES;
+                Self::ratio(
+                    (stable & max_bb).count_ones(),
+                    (stable & min_bb).count_ones(),
+                )
             }
             Iago => Self::linear_combination(
                 gs, // Weights from: Rosenbloom 1982
@@ -178,4 +188,44 @@ fn cmac(move_number: i32) -> f64 {
     } else {
         75. + move_number as f64
     }
+}
+
+#[must_use]
+pub fn stable_bb(gs: &GameState) -> Bitboard {
+    let mut queue = Vec::new();
+    let mut visited = HashSet::new();
+    let mut stable = EMPTY;
+
+    let occupied = gs.bitboard(Player::Black) | gs.bitboard(Player::White);
+
+    let corners = occupied & CORNERS;
+    stable |= corners;
+    queue.extend(positions(corners));
+
+    while let Some(source) = queue.pop() {
+        if visited.contains(&source) {
+            continue;
+        }
+        visited.insert(source);
+
+        for pos in positions(neighbours(square(source))) {
+            let mut is_stable = true;
+            for line in diagonals(pos) {
+                let neighbours = positions(line);
+                if neighbours.len() == 2
+                    && neighbours
+                        .into_iter()
+                        .all(|n| gs.at(n) != gs.at(pos) || !has(stable, n))
+                {
+                    is_stable = false;
+                }
+            }
+            if is_stable {
+                stable |= square(pos);
+                queue.push(pos);
+            }
+        }
+    }
+
+    stable
 }

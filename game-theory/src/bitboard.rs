@@ -3,9 +3,11 @@ use crate::{Position, BOARD_SQUARES};
 pub type Bitboard = u64;
 
 pub const EMPTY: Bitboard = 0x0000000000000000;
-pub const FULL: Bitboard = 0xFFFFFFFFFFFFFFFF;
+pub const FULL: Bitboard = !EMPTY;
 pub const CENTER: Bitboard = 0x0000001818000000;
 pub const CORNERS: Bitboard = 0x8100000000000081;
+pub const EDGES: Bitboard = 0xFF818181818181FF;
+pub const INTERNAL: Bitboard = !EDGES;
 pub const OTHELLO_BLACK_START: Bitboard = 0x0000000810000000;
 pub const OTHELLO_WHITE_START: Bitboard = 0x0000001008000000;
 
@@ -20,14 +22,14 @@ pub const fn has(bitboard: Bitboard, position: Position) -> bool {
 }
 
 #[must_use]
-pub fn positions(mut bitboard: Bitboard) -> Vec<Position> {
+pub fn positions(mut bb: Bitboard) -> Vec<Position> {
     let mut result = Vec::with_capacity(BOARD_SQUARES);
     let mut i = 0;
-    while bitboard != 0 {
-        if bitboard & 1 != 0 {
+    while bb != 0 {
+        if bb & 1 != 0 {
             result.push(Position::from_index(i));
         }
-        bitboard >>= 1;
+        bb >>= 1;
         i += 1;
     }
     result

@@ -109,7 +109,7 @@ fn main() {
             &ScoreGreedy::default(),
             &CornersGreedy::default(),
         ],
-        Duration::from_secs(5),
+        Duration::from_secs(1),
     );
 
     run_tournament(
@@ -146,15 +146,15 @@ fn main() {
     run_tournament(
         "BASIC HEURISTICS",
         &[
-            &AlphaBeta::new(Heuristic::MaximumDisc, 4),
-            &AlphaBeta::new(Heuristic::MinimumDisc, 4),
-            &AlphaBeta::new(Heuristic::CornersOwned, 4),
-            &AlphaBeta::new(Heuristic::CornerCloseness, 4),
-            &AlphaBeta::new(Heuristic::CurrentMobility, 4),
-            &AlphaBeta::new(Heuristic::PotentialMobility, 4),
-            &AlphaBeta::new(Heuristic::FrontierDiscs, 4),
-            &AlphaBeta::new(Heuristic::InternalStability, 4),
-            &AlphaBeta::new(Heuristic::EdgeStability, 4),
+            &AlphaBeta::new(Heuristic::MaximumDisc, 3),
+            &AlphaBeta::new(Heuristic::MinimumDisc, 3),
+            &AlphaBeta::new(Heuristic::CornersOwned, 3),
+            &AlphaBeta::new(Heuristic::CornerCloseness, 3),
+            &AlphaBeta::new(Heuristic::CurrentMobility, 3),
+            &AlphaBeta::new(Heuristic::PotentialMobility, 3),
+            &AlphaBeta::new(Heuristic::FrontierDiscs, 3),
+            &AlphaBeta::new(Heuristic::InternalStability, 3),
+            &AlphaBeta::new(Heuristic::EdgeStability, 3),
         ],
         Duration::from_secs(10),
     );
@@ -165,11 +165,11 @@ fn main() {
             &RandomMove::default(),
             &ScoreGreedy::default(),
             &CornersGreedy::default(),
-            &AlphaBeta::new(Heuristic::MaximumDisc, 4),
+            &AlphaBeta::new(Heuristic::EdgeStability, 4),
             &AlphaBeta::new(Heuristic::CornersOwned, 4),
-            &AlphaBeta::new(Heuristic::CornerCloseness, 4),
             &AlphaBeta::new(Heuristic::CurrentMobility, 4),
             &AlphaBeta::new(Heuristic::Korman, 4),
+            &AlphaBeta::new(Heuristic::Iago, 4),
         ],
         Duration::from_secs(300),
     );
