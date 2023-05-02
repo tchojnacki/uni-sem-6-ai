@@ -3,7 +3,7 @@ use super::{
     weights::{WeightMatrix, WEIGHTS_KORMAN, WEIGHTS_MAGGS, WEIGHTS_SANNIDHANAM},
 };
 use crate::{
-    bitboard::{get_moves, neighbours, positions, square, CORNERS},
+    bitboard::{neighbours, positions, potential_moves, square, valid_moves, CORNERS},
     GameState, BOARD_SQUARES,
 };
 use std::{
@@ -21,21 +21,27 @@ pub enum Heuristic {
     /// - First mention: Maggs 1979
     /// - AKA: d, disk squares, weighted square, static heuristic
     Weighted(&'static str, &'static WeightMatrix),
-    /// - First mention: TODO
+    /// - First mention: Korman 2003
     /// - AKA: c, corner occupancy, corners
     CornersOwned,
-    /// - First mention: TODO
+    /// - First mention: Korman 2003
     /// - AKA: l, corner proximity
     CornerCloseness,
     /// - First mention: Rosenbloom 1982
-    /// - AKA: m, actual mobility, current mobility
-    Mobility,
+    /// - AKA: m, mobility, actual mobility
+    CurrentMobility,
+    /// - First mention: Rosenbloom 1982
+    PotentialMobility,
     /// - First mention: Rosenbloom 1982
     /// - AKA: f
     FrontierDiscs,
     /// - First mention: Rosenbloom 1982
-    /// - AKA: s
-    Stability,
+    /// - AKA: s, stability
+    InternalStability,
+    /// - First mention: Rosenbloom 1982
+    EdgeStability,
+    /// - First mention: Rosenbloom 1982
+    Iago,
     /// - First mention: Korman 2003
     Korman,
 }
@@ -48,10 +54,13 @@ impl Display for Heuristic {
             MinimumDisc => write!(f, "MinD"),
             Weighted(name, _) => write!(f, "W({name})"),
             CornersOwned => write!(f, "CrOwn"),
-            CornerCloseness => write!(f, "CrClose"),
-            Mobility => write!(f, "Mob"),
+            CornerCloseness => write!(f, "CrCls"),
+            CurrentMobility => write!(f, "CurMob"),
+            PotentialMobility => write!(f, "PotMob"),
             FrontierDiscs => write!(f, "Front"),
-            Stability => write!(f, "Stab"),
+            InternalStability => write!(f, "InStab"),
+            EdgeStability => write!(f, "EdStab"),
+            Iago => write!(f, "IAGO"),
             Korman => write!(f, "KORMAN"),
         }
     }
@@ -93,9 +102,13 @@ impl Heuristic {
                     -0.125 * (max_sq - min_sq)
                 })
                 .sum(),
-            Mobility => Self::ratio(
-                get_moves(max_bb, min_bb).count_ones(),
-                get_moves(min_bb, max_bb).count_ones(),
+            CurrentMobility => Self::ratio(
+                valid_moves(max_bb, min_bb).count_ones(),
+                valid_moves(min_bb, max_bb).count_ones(),
+            ),
+            PotentialMobility => Self::ratio(
+                potential_moves(max_bb, min_bb).count_ones(),
+                potential_moves(min_bb, max_bb).count_ones(),
             ),
             FrontierDiscs => {
                 let empty_bb = !(max_bb | min_bb);
@@ -104,25 +117,35 @@ impl Heuristic {
                     (neighbours(min_bb) & empty_bb).count_ones(),
                 )
             }
-            Stability => {
+            InternalStability => {
                 // TODO
                 0.
             }
-            Korman => {
-                // Weights taken from "Playing Othello with Artificial Intelligence", M. Korman 2003
-                Self::linear_combination(
-                    gs,
-                    &[
-                        (801.724, CornersOwned),
-                        (382.026, CornerCloseness),
-                        (78.922, Mobility),
-                        (10., MaximumDisc),
-                        (0.1, Self::W_KORMAN),
-                        (74.396, FrontierDiscs),
-                        (100., Stability),
-                    ],
-                )
+            EdgeStability => {
+                // TODO
+                0.
             }
+            Iago => Self::linear_combination(
+                gs, // Weights from: Rosenbloom 1982
+                &[
+                    (esac(gs.move_number()), EdgeStability),
+                    (36., InternalStability),
+                    (cmac(gs.move_number()), CurrentMobility),
+                    (99., PotentialMobility),
+                ],
+            ),
+            Korman => Self::linear_combination(
+                gs, // Weights from: Korman 2003
+                &[
+                    (801.724, CornersOwned),
+                    (382.026, CornerCloseness),
+                    (78.922, CurrentMobility),
+                    (10., MaximumDisc),
+                    (0.1, Self::W_KORMAN),
+                    (74.396, FrontierDiscs),
+                    (100., InternalStability),
+                ],
+            ),
         }
     }
 
@@ -138,5 +161,21 @@ impl Heuristic {
 
     fn linear_combination(gs: &GameState, factors: &[(f64, Heuristic)]) -> f64 {
         factors.iter().map(|(w, h)| w * h.evaluate(gs)).sum()
+    }
+}
+
+#[must_use]
+fn esac(move_number: i32) -> f64 {
+    assert!((1..=60).contains(&move_number));
+    312. + 6.24 * move_number as f64
+}
+
+#[must_use]
+fn cmac(move_number: i32) -> f64 {
+    assert!((1..=60).contains(&move_number));
+    if move_number <= 25 {
+        50. + 2. * move_number as f64
+    } else {
+        75. + move_number as f64
     }
 }

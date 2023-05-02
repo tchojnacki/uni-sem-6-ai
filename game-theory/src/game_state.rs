@@ -1,7 +1,7 @@
 use crate::{
     ai::{RandomMove, Strategy},
     bitboard::{
-        diagonals, get_moves, has, make_move, positions, square, Bitboard, EMPTY,
+        diagonals, has, make_move, positions, square, valid_moves, Bitboard, EMPTY,
         OTHELLO_BLACK_START, OTHELLO_WHITE_START,
     },
     player::Player,
@@ -44,6 +44,11 @@ impl GameState {
     #[must_use]
     pub const fn score_of(&self, player: Player) -> u32 {
         self.bitboard(player).count_ones()
+    }
+
+    #[must_use]
+    pub const fn move_number(&self) -> i32 {
+        (self.black | self.white).count_ones() as i32 - 3
     }
 
     pub const fn reversi_initial() -> Self {
@@ -89,7 +94,7 @@ impl GameState {
 
     #[must_use]
     pub const fn move_bitboard(&self) -> Bitboard {
-        get_moves(
+        valid_moves(
             self.bitboard(self.turn),
             self.bitboard(self.turn.opponent()),
         )
@@ -120,6 +125,9 @@ impl GameState {
 
         next_state.turn = next_state.turn.opponent();
         next_state.pass_if_required();
+
+        assert_eq!(next_state.black & next_state.white, EMPTY);
+
         next_state
     }
 
@@ -312,5 +320,11 @@ mod tests {
     fn invalid_moves_panic() {
         let gs = GameState::othello_initial();
         let _ = gs.make_move(p("A1"));
+    }
+
+    #[test]
+    fn move_number_is_consistent() {
+        let gs = GameState::othello_initial();
+        assert_eq!(gs.move_number(), 1);
     }
 }

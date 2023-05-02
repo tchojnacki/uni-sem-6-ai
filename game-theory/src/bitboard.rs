@@ -34,7 +34,7 @@ pub fn positions(mut bitboard: Bitboard) -> Vec<Position> {
 }
 
 #[must_use]
-pub const fn get_moves(current: Bitboard, opponent: Bitboard) -> Bitboard {
+pub const fn valid_moves(current: Bitboard, opponent: Bitboard) -> Bitboard {
     let occupied = current | opponent;
     if occupied.count_ones() >= 4 {
         attack_fill(current, opponent)
@@ -43,9 +43,14 @@ pub const fn get_moves(current: Bitboard, opponent: Bitboard) -> Bitboard {
     }
 }
 
+#[must_use]
+pub fn potential_moves(current: Bitboard, opponent: Bitboard) -> Bitboard {
+    neighbours(opponent) & !(current | opponent)
+}
+
 pub fn make_move(position: Position, current: &mut Bitboard, opponent: &mut Bitboard) {
     let position = square(position);
-    if get_moves(*current, *opponent) & position == EMPTY {
+    if valid_moves(*current, *opponent) & position == EMPTY {
         panic!("Invalid move!");
     }
 
