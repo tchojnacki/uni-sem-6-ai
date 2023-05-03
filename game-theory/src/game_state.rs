@@ -75,17 +75,17 @@ impl GameState {
         }
     }
 
-    pub fn random_state_between(min_round: u32, max_round: u32) -> Self {
-        // TODO: make round numbering consistent with self.move_number()
-        if min_round > max_round || max_round > BOARD_SQUARES as u32 {
-            panic!("Invalid round count!")
-        }
-        let n = thread_rng().gen_range(min_round..=max_round);
+    pub fn random_state_between_inc(min_turn: i32, max_turn: i32) -> Self {
+        assert!((-3..=60).contains(&min_turn));
+        assert!((min_turn..=60).contains(&max_turn));
+
+        // Move from Othello move space to Reversi round space
+        let n = thread_rng().gen_range(min_turn..=max_turn) + 3;
         let strategy = RandomMove::default();
         let mut gs = Self::reversi_initial();
         for _ in 0..n {
             if gs.move_bb() == bb::EMPTY {
-                return Self::random_state_between(min_round, max_round);
+                return Self::random_state_between_inc(min_turn, max_turn);
             }
             gs = gs.make_move(strategy.decide(&gs));
         }
@@ -327,7 +327,7 @@ mod tests {
 
     #[test]
     fn move_number_is_consistent() {
-        let gs = GameState::othello_initial();
-        assert_eq!(gs.move_number(), 1);
+        assert_eq!(GameState::othello_initial().move_number(), 1);
+        assert_eq!(GameState::reversi_initial().move_number(), -3);
     }
 }

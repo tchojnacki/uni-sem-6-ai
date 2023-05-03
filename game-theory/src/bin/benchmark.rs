@@ -9,8 +9,8 @@ fn main() {
     let mut tries = 0;
     let strategy = RandomMove::default();
     for _ in 0..1000 {
-        for n in 0..=63 {
-            let gs = GameState::random_state_between(n, n);
+        for n in 1..=60 {
+            let gs = GameState::random_state_between_inc(n, n);
             if gs.outcome().is_some() {
                 continue;
             }

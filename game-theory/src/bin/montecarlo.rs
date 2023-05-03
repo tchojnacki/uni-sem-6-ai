@@ -43,7 +43,7 @@ fn run_tournament(name: &str, strats: &[&dyn Strategy], timeout: Duration) {
                 while start.elapsed() <= timeout {
                     let bi = thread_rng().gen_range(0..strat_count);
                     let wi = thread_rng().gen_range(0..strat_count);
-                    let mut gs = GameState::random_state_between(6, 8);
+                    let mut gs = GameState::random_state_between_inc(3, 5);
                     if gs.outcome().is_some() || bi == wi {
                         continue;
                     }
