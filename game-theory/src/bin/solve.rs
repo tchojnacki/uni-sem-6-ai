@@ -1,10 +1,13 @@
 use colored::{ColoredString, Colorize};
 use game_theory::{
-    ai::{AlphaBeta, Heuristic, Strategy},
+    ai::{AlphaBeta, Heuristic, Minimax, Strategy},
     strip_string, GameState, Player, BOARD_SIDE, BOARD_SQUARES,
 };
 use once_cell::sync::Lazy;
-use std::{io::stdin, time::Duration};
+use std::{
+    io::stdin,
+    time::{Duration, Instant},
+};
 
 const VERIFICATION_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -52,15 +55,27 @@ fn main() {
     print!("{gs}");
     verify_board(&gs);
 
-    let mut black_strat = AlphaBeta::new(Heuristic::MaximumDisc, 8);
-    let mut white_strat = AlphaBeta::new(Heuristic::MinimumDisc, 8);
+    let black_strat = Minimax::new(Heuristic::MaximumDisc, 7);
+    let white_strat = AlphaBeta::new(Heuristic::MinimumDisc, 7);
+
+    let start = Instant::now();
     while gs.outcome().is_none() {
         let position = match gs.turn() {
-            Player::Black => &mut black_strat,
-            Player::White => &mut white_strat,
-        }
-        .decide(&gs);
+            Player::Black => black_strat.decide(&gs),
+            Player::White => white_strat.decide(&gs),
+        };
         gs = gs.make_move(position);
     }
-    println!("{}", gs);
+    let duration = start.elapsed();
+
+    print!("{gs}");
+    eprintln!(
+        "Visited tree nodes: {:.1e} {} + {:.1e} {} = {:.1e} | Computation time: {} ms",
+        black_strat.visited(),
+        "B".bright_black().bold(),
+        white_strat.visited(),
+        "W".bright_white().bold(),
+        black_strat.visited() + white_strat.visited(),
+        duration.as_millis().to_string().bright_blue().bold()
+    );
 }

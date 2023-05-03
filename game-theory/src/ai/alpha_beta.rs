@@ -6,11 +6,14 @@ use crate::{GameState, Position};
 use std::{
     cmp::Ordering,
     fmt::{self, Display},
+    sync::atomic::{self, AtomicU32},
 };
 
+#[must_use]
 pub struct AlphaBeta {
     heuristic: Heuristic,
     max_depth: u32,
+    visited: AtomicU32,
 }
 
 impl AlphaBeta {
@@ -18,7 +21,13 @@ impl AlphaBeta {
         Self {
             heuristic,
             max_depth,
+            visited: AtomicU32::new(0),
         }
+    }
+
+    #[must_use]
+    pub fn visited(&self) -> u32 {
+        self.visited.load(atomic::Ordering::Relaxed)
     }
 
     #[must_use]
@@ -29,6 +38,8 @@ impl AlphaBeta {
         mut alpha: f64,
         mut beta: f64,
     ) -> (f64, Option<Position>) {
+        self.visited.fetch_add(1, atomic::Ordering::Relaxed);
+
         if let Some(outcome) = gs.outcome() {
             return (outcome.evaluate(), None);
         }

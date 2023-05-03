@@ -258,7 +258,8 @@ impl Display for GameState {
 
         writeln!(
             f,
-            "Turn: {} | Score: {}-{} | Winner: {}",
+            "Move number: {} | Turn: {} | Score: {}-{} | Winner: {}",
+            self.move_number(),
             self.turn,
             self.score_of(Player::Black).to_string().bright_black(),
             self.score_of(Player::White).to_string().bright_white(),
