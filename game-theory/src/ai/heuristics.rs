@@ -157,9 +157,9 @@ impl Heuristic {
     }
 
     #[must_use]
-    fn ratio<F: Into<f64>>(max: F, min: F) -> f64 {
-        let max = max.into();
-        let min = min.into();
+    fn ratio(max: u32, min: u32) -> f64 {
+        let max: f64 = max.into();
+        let min: f64 = min.into();
         match max.partial_cmp(&min).unwrap() {
             Ordering::Less => -min / (max + min),
             Ordering::Equal => 0.,
@@ -235,5 +235,26 @@ impl Heuristic {
         }
 
         stable
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use quickcheck_macros::quickcheck;
+
+    #[quickcheck]
+    fn ratio_is_normalized(max: u32, min: u32) -> bool {
+        (-1. ..=1.).contains(&Heuristic::ratio(max, min))
+    }
+
+    #[quickcheck]
+    fn esac_returns_nonnegative_coeffs(gs: GameState) -> bool {
+        Heuristic::esac(gs.move_number()) >= 0.
+    }
+
+    #[quickcheck]
+    fn cmac_returns_nonnegative_coeffs(gs: GameState) -> bool {
+        Heuristic::cmac(gs.move_number()) >= 0.
     }
 }

@@ -43,18 +43,6 @@ impl Position {
         self.0 as usize
     }
 
-    #[must_use]
-    pub const fn offset(&self, by: (i32, i32)) -> Option<Self> {
-        let col = (self.index() % BOARD_SIDE) as i32 + by.0;
-        let row = (self.index() / BOARD_SIDE) as i32 + by.1;
-
-        if 0 <= col && col < BOARD_SIDE as i32 && 0 <= row && row < BOARD_SIDE as i32 {
-            Some(Position((row * BOARD_SIDE as i32 + col) as u8))
-        } else {
-            None
-        }
-    }
-
     pub fn neighbours(&self) -> impl Iterator<Item = Self> {
         bb::positions(bb::neighbours(bb::from_pos(*self))).into_iter()
     }
@@ -74,6 +62,15 @@ impl Display for Position {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck::Arbitrary;
+    use quickcheck_macros::quickcheck;
+
+    impl Arbitrary for Position {
+        fn arbitrary(gen: &mut quickcheck::Gen) -> Self {
+            *gen.choose(&(0..=63).map(Position::from_index).collect::<Vec<_>>())
+                .unwrap()
+        }
+    }
 
     #[test]
     fn from_works_for_valid_notations() {
@@ -114,63 +111,13 @@ mod tests {
         assert_eq!(Position::from("C3\n"), None);
     }
 
-    #[test]
-    fn to_string_and_from_are_inverses() {
-        fn test(before: Position) {
-            let after = Position::from(&before.to_string());
-            assert_eq!(Some(before), after);
-        }
-
-        test(p("A1"));
-        test(p("C3"));
-        test(p("H7"));
-        test(p("D4"));
+    #[quickcheck]
+    fn to_string_and_from_are_inverses(position: Position) -> bool {
+        Position::from(&position.to_string()) == Some(position)
     }
 
-    #[test]
-    fn offset_returns_moved_pos_for_valid_args() {
-        // Zero offset
-        assert_eq!(p("A3").offset((0, 0)), Some(p("A3")));
-        assert_eq!(p("E8").offset((0, 0)), Some(p("E8")));
-        // Column offset
-        assert_eq!(p("B3").offset((3, 0)), Some(p("E3")));
-        assert_eq!(p("B1").offset((-1, 0)), Some(p("A1")));
-        // Row offset
-        assert_eq!(p("C7").offset((0, 1)), Some(p("C8")));
-        assert_eq!(p("A5").offset((0, -2)), Some(p("A3")));
-        // Mixed offset
-        assert_eq!(p("C4").offset((3, 2)), Some(p("F6")));
-        assert_eq!(p("B2").offset((-1, 6)), Some(p("A8")));
-    }
-
-    #[test]
-    fn offset_returns_none_for_invalid_args() {
-        // Top-left corner
-        assert_eq!(p("A1").offset((-1, 0)), None);
-        assert_eq!(p("A1").offset((0, -1)), None);
-        // Top-right corner
-        assert_eq!(p("H1").offset((1, 0)), None);
-        assert_eq!(p("H1").offset((0, -1)), None);
-        // Bottom-left corner
-        assert_eq!(p("A8").offset((-1, 0)), None);
-        assert_eq!(p("A8").offset((0, 1)), None);
-        // Bottom-right corner
-        assert_eq!(p("H8").offset((1, 0)), None);
-        assert_eq!(p("H8").offset((0, 1)), None);
-        // Top side
-        assert_eq!(p("G1").offset((1, -2)), None);
-        assert_eq!(p("D1").offset((-2, -1)), None);
-        // Right side
-        assert_eq!(p("H4").offset((3, -2)), None);
-        assert_eq!(p("H1").offset((1, 3)), None);
-        // Bottom side
-        assert_eq!(p("C8").offset((3, 1)), None);
-        assert_eq!(p("H8").offset((-4, 3)), None);
-        // Left side
-        assert_eq!(p("A2").offset((-3, 0)), None);
-        assert_eq!(p("A7").offset((-2, 1)), None);
-        // From center
-        assert_eq!(p("D4").offset((5, 0)), None);
-        assert_eq!(p("E5").offset((-5, -5)), None);
+    #[quickcheck]
+    fn index_and_from_index_are_inverses(position: Position) -> bool {
+        Position::from_index(position.index()) == position
     }
 }

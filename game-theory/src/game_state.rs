@@ -18,7 +18,7 @@ use std::{
 };
 
 #[must_use]
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct GameState {
     turn: Player,
     black: Bitboard,
@@ -273,11 +273,52 @@ impl Display for GameState {
 mod tests {
     use super::*;
     use crate::position::p;
+    use quickcheck::Arbitrary;
+    use quickcheck_macros::quickcheck;
+
+    impl Arbitrary for GameState {
+        fn arbitrary(_: &mut quickcheck::Gen) -> Self {
+            Self::random_state_between_inc(1, 60)
+        }
+    }
+
+    impl Arbitrary for Player {
+        fn arbitrary(gen: &mut quickcheck::Gen) -> Self {
+            *gen.choose(&[Player::Black, Player::White]).unwrap()
+        }
+    }
 
     fn assert_moves(gs: &GameState, expected: &[Position]) {
         let mut moves = gs.moves();
         moves.sort_by_key(|p| p.index());
         assert_eq!(moves, expected);
+    }
+
+    #[quickcheck]
+    fn score_of_is_in_range(gs: GameState, player: Player) -> bool {
+        (0..=64).contains(&gs.score_of(player))
+    }
+
+    #[test]
+    fn move_number_is_consistent() {
+        assert_eq!(GameState::othello_initial().move_number(), 1);
+        assert_eq!(GameState::reversi_initial().move_number(), -3);
+    }
+
+    #[quickcheck]
+    fn move_number_is_in_range(gs: GameState) -> bool {
+        (1..=60).contains(&gs.move_number())
+    }
+
+    #[quickcheck]
+    fn random_state_returns_correct_move_number() -> bool {
+        let n = thread_rng().gen_range(1..=60);
+        GameState::random_state_between_inc(n, n).move_number() == n
+    }
+
+    #[quickcheck]
+    fn move_bb_has_same_move_count_as_moves(gs: GameState) -> bool {
+        gs.move_bb().count_ones() == gs.moves().len() as u32
     }
 
     #[test]
@@ -323,11 +364,5 @@ mod tests {
     fn invalid_moves_panic() {
         let gs = GameState::othello_initial();
         let _ = gs.make_move(p("A1"));
-    }
-
-    #[test]
-    fn move_number_is_consistent() {
-        assert_eq!(GameState::othello_initial().move_number(), 1);
-        assert_eq!(GameState::reversi_initial().move_number(), -3);
     }
 }

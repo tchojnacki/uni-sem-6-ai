@@ -17,3 +17,14 @@ impl Strategy for RandomMove {
         *gs.moves().choose(&mut thread_rng()).unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use quickcheck_macros::quickcheck;
+
+    #[quickcheck]
+    fn random_move_always_returns_a_valid_move(gs: GameState) -> bool {
+        gs.outcome().is_some() || gs.moves().contains(&RandomMove::default().decide(&gs))
+    }
+}
