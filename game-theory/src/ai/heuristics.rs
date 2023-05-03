@@ -24,6 +24,7 @@ impl Outcome {
 }
 
 #[non_exhaustive]
+#[derive(Debug, Clone)]
 pub enum Heuristic {
     /// - First mention: Rosenbloom 1982
     /// - AKA: p, coin party, piece difference
@@ -96,12 +97,14 @@ impl Heuristic {
             MinimumDisc => -&MaximumDisc.evaluate(gs),
             Weighted(_, weights) => {
                 let mut total = 0.;
+                let mut max = 0.;
                 for i in 0..BOARD_SQUARES {
                     total += ((max_bb & 1) as f64 - (min_bb & 1) as f64) * weights[i] as f64;
+                    max += weights[i].max(0) as f64;
                     max_bb >>= 1;
                     min_bb >>= 1;
                 }
-                total
+                total / max
             }
             CornersOwned => {
                 let max_corners = (gs.bb_of(MAX_PLAYER) & bb::CORNERS).count_ones() as f64;
@@ -111,10 +114,14 @@ impl Heuristic {
             CornerCloseness => bb::positions(bb::CORNERS)
                 .into_iter()
                 .map(|p| {
-                    let target = bb::neighbours(bb::from_pos(p));
-                    let max_sq = (target & gs.bb_of(MAX_PLAYER)).count_ones() as f64;
-                    let min_sq = (target & gs.bb_of(MIN_PLAYER)).count_ones() as f64;
-                    -0.125 * (max_sq - min_sq)
+                    if bb::has(gs.empty_bb(), p) {
+                        let target = bb::neighbours(bb::from_pos(p));
+                        let max_sq = (target & gs.bb_of(MAX_PLAYER)).count_ones() as f64;
+                        let min_sq = (target & gs.bb_of(MIN_PLAYER)).count_ones() as f64;
+                        -0.125 * (max_sq - min_sq)
+                    } else {
+                        0.
+                    }
                 })
                 .sum(),
             CurrentMobility => Self::ratio(
@@ -144,12 +151,12 @@ impl Heuristic {
             Korman => Self::linear_combination(
                 gs, // Weights from: Korman 2003
                 &[
-                    (801.724, CornersOwned),
-                    (382.026, CornerCloseness),
-                    (78.922, CurrentMobility),
+                    (802., CornersOwned),
+                    (382., CornerCloseness),
+                    (79., CurrentMobility),
                     (10., MaximumDisc),
-                    (0.1, Self::W_KORMAN),
-                    (74.396, FrontierDiscs),
+                    (26., Self::W_KORMAN),
+                    (74., FrontierDiscs),
                     (100., Stability),
                 ],
             ),
@@ -169,7 +176,8 @@ impl Heuristic {
 
     #[must_use]
     fn linear_combination(gs: &GameState, factors: &[(f64, Heuristic)]) -> f64 {
-        factors.iter().map(|(w, h)| w * h.evaluate(gs)).sum()
+        factors.iter().map(|(w, h)| w * h.evaluate(gs)).sum::<f64>()
+            / factors.iter().map(|(w, _)| w).sum::<f64>()
     }
 
     #[must_use]
@@ -241,7 +249,38 @@ impl Heuristic {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck::Arbitrary;
     use quickcheck_macros::quickcheck;
+
+    impl Arbitrary for Heuristic {
+        fn arbitrary(gen: &mut quickcheck::Gen) -> Self {
+            use Heuristic::*;
+            gen.choose(&[
+                MaximumDisc,
+                MinimumDisc,
+                Heuristic::W_MAGGS,
+                Heuristic::W_SANNIDHANAM,
+                Heuristic::W_KORMAN,
+                CornersOwned,
+                CornerCloseness,
+                CurrentMobility,
+                PotentialMobility,
+                FrontierDiscs,
+                InternalStability,
+                EdgeStability,
+                Stability,
+                Iago,
+                Korman,
+            ])
+            .cloned()
+            .unwrap()
+        }
+    }
+
+    #[quickcheck]
+    fn all_heuristics_are_normalized(heuristic: Heuristic, gs: GameState) -> bool {
+        (-1. ..=1.).contains(&heuristic.evaluate(&gs))
+    }
 
     #[quickcheck]
     fn ratio_is_normalized(max: u32, min: u32) -> bool {
