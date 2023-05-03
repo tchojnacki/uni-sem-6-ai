@@ -1,6 +1,6 @@
 use super::{
     heuristics::{Heuristic, MAX_PLAYER, MIN_PLAYER},
-    Strategy,
+    strategy::{Strategy, TreeVisitingStrategy},
 };
 use crate::{GameState, Position};
 use std::{
@@ -23,11 +23,6 @@ impl Minimax {
             max_depth,
             visited: AtomicU32::new(0),
         }
-    }
-
-    #[must_use]
-    pub fn visited(&self) -> u32 {
-        self.visited.load(atomic::Ordering::Relaxed)
     }
 
     #[must_use]
@@ -69,5 +64,12 @@ impl Strategy for Minimax {
     fn decide(&self, gs: &GameState) -> crate::Position {
         let (_, pos) = self.minimax(gs, self.max_depth);
         pos.unwrap()
+    }
+}
+
+impl TreeVisitingStrategy for Minimax {
+    #[must_use]
+    fn visited(&self) -> u32 {
+        self.visited.load(atomic::Ordering::Relaxed)
     }
 }

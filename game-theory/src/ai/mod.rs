@@ -17,4 +17,4 @@ pub use minimax::Minimax;
 pub use player_input::PlayerInput;
 pub use random_move::RandomMove;
 pub use score_greedy::ScoreGreedy;
-pub use strategy::Strategy;
+pub use strategy::{Strategy, TreeVisitingStrategy};

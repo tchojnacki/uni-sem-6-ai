@@ -1,6 +1,6 @@
 use super::{
     heuristics::{Heuristic, MAX_PLAYER, MIN_PLAYER},
-    Strategy,
+    strategy::{Strategy, TreeVisitingStrategy},
 };
 use crate::{GameState, Position};
 use std::{
@@ -23,11 +23,6 @@ impl AlphaBeta {
             max_depth,
             visited: AtomicU32::new(0),
         }
-    }
-
-    #[must_use]
-    pub fn visited(&self) -> u32 {
-        self.visited.load(atomic::Ordering::Relaxed)
     }
 
     #[must_use]
@@ -84,5 +79,12 @@ impl Strategy for AlphaBeta {
     fn decide(&self, gs: &GameState) -> crate::Position {
         let (_, pos) = self.alpha_beta(gs, self.max_depth, f64::NEG_INFINITY, f64::INFINITY);
         pos.unwrap()
+    }
+}
+
+impl TreeVisitingStrategy for AlphaBeta {
+    #[must_use]
+    fn visited(&self) -> u32 {
+        self.visited.load(atomic::Ordering::Relaxed)
     }
 }
