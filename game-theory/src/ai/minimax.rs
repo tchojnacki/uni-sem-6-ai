@@ -1,12 +1,12 @@
-use super::{heuristics::Heuristic, Strategy};
-use crate::{GameState, Outcome, Player, Position};
+use super::{
+    heuristics::{Heuristic, MAX_PLAYER, MIN_PLAYER},
+    Strategy,
+};
+use crate::{GameState, Position};
 use std::{
     cmp::Ordering,
     fmt::{self, Display},
 };
-
-pub const MAX_PLAYER: Player = Player::Black;
-pub const MIN_PLAYER: Player = Player::White;
 
 pub struct Minimax {
     heuristic: Heuristic,
@@ -24,14 +24,7 @@ impl Minimax {
     #[must_use]
     fn minimax(&self, gs: &GameState, depth: u32) -> (f64, Option<Position>) {
         if let Some(outcome) = gs.outcome() {
-            return (
-                match outcome {
-                    Outcome::Winner(MAX_PLAYER) => f64::INFINITY,
-                    Outcome::Winner(MIN_PLAYER) => f64::NEG_INFINITY,
-                    Outcome::Draw => 0.,
-                },
-                None,
-            );
+            return (outcome.evaluate(), None);
         }
 
         if depth == 0 {

@@ -1,8 +1,5 @@
 use super::strategy::Strategy;
-use crate::{
-    bitboard::{positions, CORNERS, EMPTY},
-    GameState, Position,
-};
+use crate::{bitboard as bb, GameState, Position};
 use rand::{seq::SliceRandom, thread_rng};
 use std::fmt::{self, Display};
 
@@ -17,10 +14,10 @@ impl Display for CornersGreedy {
 
 impl Strategy for CornersGreedy {
     fn decide(&self, gs: &GameState) -> Position {
-        let valid_moves = gs.move_bitboard();
-        let valid_corners = valid_moves & CORNERS;
+        let valid_moves = gs.move_bb();
+        let valid_corners = valid_moves & bb::CORNERS;
 
-        *positions(if valid_corners != EMPTY {
+        *bb::positions(if valid_corners != bb::EMPTY {
             valid_corners
         } else {
             valid_moves

@@ -1,19 +1,27 @@
-use super::{
-    minimax::{MAX_PLAYER, MIN_PLAYER},
-    weights::{WeightMatrix, WEIGHTS_KORMAN, WEIGHTS_MAGGS, WEIGHTS_SANNIDHANAM},
-};
+use super::weights::{WeightMatrix, WEIGHTS_KORMAN, WEIGHTS_MAGGS, WEIGHTS_SANNIDHANAM};
 use crate::{
-    bitboard::{
-        diagonals, has, neighbours, positions, potential_moves, square, valid_moves, Bitboard,
-        CORNERS, EDGES, EMPTY, INTERNAL,
-    },
-    GameState, Player, BOARD_SQUARES,
+    bitboard::{self as bb, Bitboard},
+    GameState, Outcome, Player, BOARD_SQUARES,
 };
 use std::{
     cmp::Ordering,
     collections::HashSet,
     fmt::{self, Display},
 };
+
+pub const MAX_PLAYER: Player = Player::Black;
+pub const MIN_PLAYER: Player = Player::White;
+
+impl Outcome {
+    #[must_use]
+    pub const fn evaluate(&self) -> f64 {
+        match self {
+            Outcome::Winner(MAX_PLAYER) => f64::INFINITY,
+            Outcome::Winner(MIN_PLAYER) => f64::NEG_INFINITY,
+            Outcome::Draw => 0.,
+        }
+    }
+}
 
 #[non_exhaustive]
 pub enum Heuristic {
@@ -40,10 +48,12 @@ pub enum Heuristic {
     /// - AKA: f
     FrontierDiscs,
     /// - First mention: Rosenbloom 1982
-    /// - AKA: s, stability
     InternalStability,
     /// - First mention: Rosenbloom 1982
     EdgeStability,
+    /// - First mention: Korman 2003
+    /// - AKA: s
+    Stability,
     /// - First mention: Rosenbloom 1982
     Iago,
     /// - First mention: Korman 2003
@@ -64,6 +74,7 @@ impl Display for Heuristic {
             FrontierDiscs => write!(f, "Front"),
             InternalStability => write!(f, "InStab"),
             EdgeStability => write!(f, "EdStab"),
+            Stability => write!(f, "Stab"),
             Iago => write!(f, "IAGO"),
             Korman => write!(f, "KORMAN"),
         }
@@ -78,8 +89,8 @@ impl Heuristic {
     #[must_use]
     pub fn evaluate(&self, gs: &GameState) -> f64 {
         use Heuristic::*;
-        let mut max_bb = gs.bitboard(MAX_PLAYER);
-        let mut min_bb = gs.bitboard(MIN_PLAYER);
+        let mut max_bb = gs.bb_of(MAX_PLAYER);
+        let mut min_bb = gs.bb_of(MIN_PLAYER);
         match self {
             MaximumDisc => Self::ratio(gs.score_of(MAX_PLAYER), gs.score_of(MIN_PLAYER)),
             MinimumDisc => -&MaximumDisc.evaluate(gs),
@@ -93,54 +104,40 @@ impl Heuristic {
                 total
             }
             CornersOwned => {
-                let max_corners = (gs.bitboard(MAX_PLAYER) & CORNERS).count_ones() as f64;
-                let min_corners = (gs.bitboard(MIN_PLAYER) & CORNERS).count_ones() as f64;
+                let max_corners = (gs.bb_of(MAX_PLAYER) & bb::CORNERS).count_ones() as f64;
+                let min_corners = (gs.bb_of(MIN_PLAYER) & bb::CORNERS).count_ones() as f64;
                 (max_corners - min_corners) / 4.
             }
-            CornerCloseness => positions(CORNERS)
+            CornerCloseness => bb::positions(bb::CORNERS)
                 .into_iter()
                 .map(|p| {
-                    let target = neighbours(square(p));
-                    let max_sq = (target & gs.bitboard(MAX_PLAYER)).count_ones() as f64;
-                    let min_sq = (target & gs.bitboard(MIN_PLAYER)).count_ones() as f64;
+                    let target = bb::neighbours(bb::from_pos(p));
+                    let max_sq = (target & gs.bb_of(MAX_PLAYER)).count_ones() as f64;
+                    let min_sq = (target & gs.bb_of(MIN_PLAYER)).count_ones() as f64;
                     -0.125 * (max_sq - min_sq)
                 })
                 .sum(),
             CurrentMobility => Self::ratio(
-                valid_moves(max_bb, min_bb).count_ones(),
-                valid_moves(min_bb, max_bb).count_ones(),
+                bb::valid_moves(max_bb, min_bb).count_ones(),
+                bb::valid_moves(min_bb, max_bb).count_ones(),
             ),
             PotentialMobility => Self::ratio(
-                potential_moves(max_bb, min_bb).count_ones(),
-                potential_moves(min_bb, max_bb).count_ones(),
+                bb::potential_moves(max_bb, min_bb).count_ones(),
+                bb::potential_moves(min_bb, max_bb).count_ones(),
             ),
-            FrontierDiscs => {
-                let empty_bb = !(max_bb | min_bb);
-                -Self::ratio(
-                    (neighbours(max_bb) & empty_bb).count_ones(),
-                    (neighbours(min_bb) & empty_bb).count_ones(),
-                )
-            }
-            InternalStability => {
-                let stable = stable_bb(gs) & INTERNAL;
-                Self::ratio(
-                    (stable & max_bb).count_ones(),
-                    (stable & min_bb).count_ones(),
-                )
-            }
-            EdgeStability => {
-                let stable = stable_bb(gs) & EDGES;
-                Self::ratio(
-                    (stable & max_bb).count_ones(),
-                    (stable & min_bb).count_ones(),
-                )
-            }
+            FrontierDiscs => -Self::ratio(
+                (bb::neighbours(max_bb) & gs.empty_bb()).count_ones(),
+                (bb::neighbours(min_bb) & gs.empty_bb()).count_ones(),
+            ),
+            InternalStability => Self::stability_ratio(gs, bb::INTERNAL),
+            EdgeStability => Self::stability_ratio(gs, bb::EDGES),
+            Stability => Self::stability_ratio(gs, bb::FULL),
             Iago => Self::linear_combination(
                 gs, // Weights from: Rosenbloom 1982
                 &[
-                    (esac(gs.move_number()), EdgeStability),
+                    (Self::esac(gs.move_number()), EdgeStability),
                     (36., InternalStability),
-                    (cmac(gs.move_number()), CurrentMobility),
+                    (Self::cmac(gs.move_number()), CurrentMobility),
                     (99., PotentialMobility),
                 ],
             ),
@@ -153,12 +150,13 @@ impl Heuristic {
                     (10., MaximumDisc),
                     (0.1, Self::W_KORMAN),
                     (74.396, FrontierDiscs),
-                    (100., InternalStability),
+                    (100., Stability),
                 ],
             ),
         }
     }
 
+    #[must_use]
     fn ratio<F: Into<f64>>(max: F, min: F) -> f64 {
         let max = max.into();
         let min = min.into();
@@ -169,63 +167,73 @@ impl Heuristic {
         }
     }
 
+    #[must_use]
     fn linear_combination(gs: &GameState, factors: &[(f64, Heuristic)]) -> f64 {
         factors.iter().map(|(w, h)| w * h.evaluate(gs)).sum()
     }
-}
 
-#[must_use]
-fn esac(move_number: i32) -> f64 {
-    assert!((1..=60).contains(&move_number));
-    312. + 6.24 * move_number as f64
-}
-
-#[must_use]
-fn cmac(move_number: i32) -> f64 {
-    assert!((1..=60).contains(&move_number));
-    if move_number <= 25 {
-        50. + 2. * move_number as f64
-    } else {
-        75. + move_number as f64
+    #[must_use]
+    fn esac(move_number: i32) -> f64 {
+        assert!((1..=60).contains(&move_number));
+        312. + 6.24 * move_number as f64
     }
-}
 
-#[must_use]
-pub fn stable_bb(gs: &GameState) -> Bitboard {
-    let mut queue = Vec::new();
-    let mut visited = HashSet::new();
-    let mut stable = EMPTY;
-
-    let occupied = gs.bitboard(Player::Black) | gs.bitboard(Player::White);
-
-    let corners = occupied & CORNERS;
-    stable |= corners;
-    queue.extend(positions(corners));
-
-    while let Some(source) = queue.pop() {
-        if visited.contains(&source) {
-            continue;
+    #[must_use]
+    fn cmac(move_number: i32) -> f64 {
+        assert!((1..=60).contains(&move_number));
+        if move_number <= 25 {
+            50. + 2. * move_number as f64
+        } else {
+            75. + move_number as f64
         }
-        visited.insert(source);
+    }
 
-        for pos in positions(neighbours(square(source))) {
-            let mut is_stable = true;
-            for line in diagonals(pos) {
-                let neighbours = positions(line);
-                if neighbours.len() == 2
-                    && neighbours
-                        .into_iter()
-                        .all(|n| gs.at(n) != gs.at(pos) || !has(stable, n))
-                {
-                    is_stable = false;
+    #[must_use]
+    fn stability_ratio(gs: &GameState, mask: Bitboard) -> f64 {
+        let max_bb = gs.bb_of(MAX_PLAYER);
+        let min_bb = gs.bb_of(MIN_PLAYER);
+        let stable = Self::stable_bb(gs) & mask;
+        Self::ratio(
+            (stable & max_bb).count_ones(),
+            (stable & min_bb).count_ones(),
+        )
+    }
+
+    #[must_use]
+    fn stable_bb(gs: &GameState) -> Bitboard {
+        let mut queue = Vec::new();
+        let mut visited = HashSet::new();
+        let mut stable = bb::EMPTY;
+
+        let corners = gs.occupied_bb() & bb::CORNERS;
+        stable |= corners;
+        queue.extend(bb::positions(corners));
+
+        while let Some(source) = queue.pop() {
+            if visited.contains(&source) {
+                continue;
+            }
+            visited.insert(source);
+
+            for pos in source.neighbours() {
+                let mut is_stable = true;
+                for line in bb::diagonals(pos) {
+                    let neighbours = bb::positions(line);
+                    if neighbours.len() == 2
+                        && neighbours
+                            .into_iter()
+                            .all(|n| gs.at(n) != gs.at(pos) || !bb::has(stable, n))
+                    {
+                        is_stable = false;
+                    }
+                }
+                if is_stable {
+                    stable |= bb::from_pos(pos);
+                    queue.push(pos);
                 }
             }
-            if is_stable {
-                stable |= square(pos);
-                queue.push(pos);
-            }
         }
-    }
 
-    stable
+        stable
+    }
 }

@@ -12,21 +12,21 @@ pub const OTHELLO_BLACK_START: Bitboard = 0x0000000810000000;
 pub const OTHELLO_WHITE_START: Bitboard = 0x0000001008000000;
 
 #[must_use]
-pub const fn square(position: Position) -> Bitboard {
+pub const fn from_pos(position: Position) -> Bitboard {
     1 << position.index()
 }
 
 #[must_use]
 pub const fn has(bitboard: Bitboard, position: Position) -> bool {
-    bitboard & square(position) != EMPTY
+    bitboard & from_pos(position) != EMPTY
 }
 
 #[must_use]
 pub fn positions(mut bb: Bitboard) -> Vec<Position> {
     let mut result = Vec::with_capacity(BOARD_SQUARES);
     let mut i = 0;
-    while bb != 0 {
-        if bb & 1 != 0 {
+    while bb != EMPTY {
+        if bb & 1 != EMPTY {
             result.push(Position::from_index(i));
         }
         bb >>= 1;
@@ -51,7 +51,7 @@ pub fn potential_moves(current: Bitboard, opponent: Bitboard) -> Bitboard {
 }
 
 pub fn make_move(position: Position, current: &mut Bitboard, opponent: &mut Bitboard) {
-    let position = square(position);
+    let position = from_pos(position);
     if valid_moves(*current, *opponent) & position == EMPTY {
         panic!("Invalid move!");
     }
@@ -65,7 +65,7 @@ pub fn make_move(position: Position, current: &mut Bitboard, opponent: &mut Bitb
 #[must_use]
 pub const fn diagonals(position: Position) -> [Bitboard; 4] {
     use dumb7fill::*;
-    let bb = square(position);
+    let bb = from_pos(position);
     [
         shift_nort(bb) | shift_sout(bb),
         shift_noea(bb) | shift_sowe(bb),

@@ -25,7 +25,7 @@ fn main() {
     let mut round_distribution = [0; BOARD_SQUARES + 1];
     let mut outcome_distribution = [0; BOARD_SQUARES + 1];
     for gs in states.iter() {
-        total_branches += gs.move_bitboard().count_ones();
+        total_branches += gs.move_bb().count_ones();
 
         let occupied_squares = (gs.score_of(Player::Black) + gs.score_of(Player::White)) as usize;
         round_distribution[occupied_squares] += 1;

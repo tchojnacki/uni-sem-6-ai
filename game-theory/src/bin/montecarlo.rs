@@ -13,6 +13,7 @@ use std::{
 };
 
 const ELO_K: f64 = 32.;
+const INITIAL_ELO: i32 = 1000;
 
 fn elo_probability(loser: i32, winner: i32) -> f64 {
     1. / (1. + 10f64.powf((loser as f64 - winner as f64) / 400.))
@@ -63,7 +64,7 @@ fn run_tournament(name: &str, strats: &[&dyn Strategy], timeout: Duration) {
     });
     drop(tx);
 
-    let mut ratings = vec![1000; strat_count];
+    let mut ratings = vec![INITIAL_ELO; strat_count];
     let mut games = vec![0; strat_count];
     let mut wins = vec![0; strat_count];
     let mut total_games = 0;
@@ -155,6 +156,7 @@ fn main() {
             &AlphaBeta::new(Heuristic::FrontierDiscs, 3),
             &AlphaBeta::new(Heuristic::InternalStability, 3),
             &AlphaBeta::new(Heuristic::EdgeStability, 3),
+            &AlphaBeta::new(Heuristic::Stability, 3),
         ],
         Duration::from_secs(10),
     );
@@ -163,7 +165,6 @@ fn main() {
         "FULL TOURNAMENT",
         &[
             &RandomMove::default(),
-            &ScoreGreedy::default(),
             &CornersGreedy::default(),
             &AlphaBeta::new(Heuristic::EdgeStability, 4),
             &AlphaBeta::new(Heuristic::CornersOwned, 4),

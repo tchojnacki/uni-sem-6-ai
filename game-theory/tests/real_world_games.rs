@@ -1,11 +1,11 @@
-use game_theory::{p, GameState, Outcome, Player};
+use game_theory::{GameState, Outcome, Player, Position};
 
 fn from_transcript(transcript: &'static str) -> GameState {
     let mut gs = GameState::othello_initial();
     for m in transcript
         .as_bytes()
         .chunks_exact(2)
-        .map(|c| p(std::str::from_utf8(c).unwrap()))
+        .map(|c| Position::from(std::str::from_utf8(c).unwrap()).unwrap())
     {
         assert_eq!(gs.outcome(), None);
         gs = gs.make_move(m);

@@ -1,3 +1,4 @@
+use crate::bitboard as bb;
 use std::fmt::{self, Display};
 
 pub const BOARD_SIDE: usize = 8;
@@ -10,6 +11,7 @@ const ROW_NOTATION: &str = "12345678";
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Position(u8);
 
+#[cfg(test)]
 pub fn p(notation: &'static str) -> Position {
     Position::from(notation).unwrap()
 }
@@ -51,6 +53,10 @@ impl Position {
         } else {
             None
         }
+    }
+
+    pub fn neighbours(&self) -> impl Iterator<Item = Self> {
+        bb::positions(bb::neighbours(bb::from_pos(*self))).into_iter()
     }
 }
 

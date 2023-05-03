@@ -5,7 +5,7 @@ const TIMEOUT: Duration = Duration::from_secs(1);
 
 macro_rules! reachability {
     ($id:literal) => {
-        GameState::from_board_string_unverified(include_str!(concat!(
+        GameState::from_board_str_unverified(include_str!(concat!(
             "../../data/boards/",
             $id,
             ".txt"

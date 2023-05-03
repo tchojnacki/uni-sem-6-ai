@@ -43,7 +43,7 @@ fn main() {
         board_str += &strip_string(&line);
     }
 
-    let gs = GameState::from_board_string_unverified(&board_str);
+    let gs = GameState::from_board_str_unverified(&board_str);
     let Some(mut gs) = gs else {
         println!("{} Invalid board string! Aborting...", *CRITICAL);
         return;

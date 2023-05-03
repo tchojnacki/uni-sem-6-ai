@@ -25,7 +25,7 @@ impl Strategy for PlayerInput {
             buffer.make_ascii_uppercase();
 
             if let Some(position) = Position::from(buffer.trim()) {
-                if has(gs.move_bitboard(), position) {
+                if has(gs.move_bb(), position) {
                     return position;
                 } else {
                     println!("Illegal move!");
