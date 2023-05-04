@@ -7,7 +7,6 @@ use game_theory::{
 use once_cell::sync::Lazy;
 use std::{
     io::stdin,
-    process::exit,
     time::{Duration, Instant},
 };
 
@@ -113,7 +112,7 @@ struct Args {
     no_verification: bool,
 }
 
-fn parse_board() -> GameState {
+fn board_prompt() -> Option<GameState> {
     println!("Enter the board string:");
     let mut board_str = String::with_capacity(BOARD_SQUARES);
     while board_str.len() < BOARD_SQUARES {
@@ -121,12 +120,7 @@ fn parse_board() -> GameState {
         stdin().read_line(&mut line).unwrap();
         board_str += &strip_string(&line);
     }
-    if let Some(gs) = GameState::from_board_str_unverified(&board_str) {
-        gs
-    } else {
-        println!("{} Invalid board string! Aborting...", *CRITICAL);
-        exit(1);
-    }
+    GameState::from_board_str_unverified(&board_str)
 }
 
 fn verify_board(gs: &GameState) {
@@ -149,39 +143,45 @@ fn verify_board(gs: &GameState) {
     }
 }
 
-fn extract_strats(args: &Args) -> (Box<dyn TreeVisitingStrategy>, Box<dyn TreeVisitingStrategy>) {
-    let bh = args.black_heuristic.into();
-    let bd = args.black_depth;
-    let black_strat: Box<dyn TreeVisitingStrategy> = if args.no_black_pruning {
-        Box::new(Minimax::new(bh, bd))
+fn build_strategy(
+    heuristic: HeuristicArg,
+    depth: u32,
+    no_pruning: bool,
+) -> Box<dyn TreeVisitingStrategy> {
+    let heuristic = heuristic.into();
+    if no_pruning {
+        Box::new(Minimax::new(heuristic, depth))
     } else {
-        Box::new(AlphaBeta::new(bh, bd))
-    };
-
-    let wh = args.white_heuristic.into();
-    let wd = args.white_depth;
-    let white_strat: Box<dyn TreeVisitingStrategy> = if args.no_white_pruning {
-        Box::new(Minimax::new(wh, wd))
-    } else {
-        Box::new(AlphaBeta::new(wh, wd))
-    };
-
-    (black_strat, white_strat)
+        Box::new(AlphaBeta::new(heuristic, depth))
+    }
 }
 
 fn main() {
     let args = Args::parse();
-    let mut gs = parse_board();
+    let Some(mut gs) = board_prompt() else {
+        println!("{} Invalid board string! Aborting...", *CRITICAL);
+        return;
+    };
 
     if !args.no_initial {
-        println!("{} Recognized game state:\n{gs}", *INFO);
+        println!("{} Recognized game state:", *INFO);
+        print!("{gs}");
     }
 
     if !args.no_verification {
         verify_board(&gs);
     }
 
-    let (black_strat, white_strat) = extract_strats(&args);
+    let black_strat = build_strategy(
+        args.black_heuristic,
+        args.black_depth,
+        args.no_black_pruning,
+    );
+    let white_strat = build_strategy(
+        args.white_heuristic,
+        args.white_depth,
+        args.no_white_pruning,
+    );
 
     let start = Instant::now();
     while gs.outcome().is_none() {
@@ -193,6 +193,7 @@ fn main() {
     }
     let duration = start.elapsed();
 
+    println!("{} Solved board:", *OK);
     print!("{gs}");
     eprintln!(
         "Visited tree nodes: {:.1e} {} + {:.1e} {} = {:.1e} | Computation time: {} ms",
