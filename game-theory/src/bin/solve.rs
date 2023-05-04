@@ -1,10 +1,9 @@
-use clap::{value_parser, Parser, ValueEnum};
-use colored::{ColoredString, Colorize};
+use clap::{value_parser, Parser};
+use colored::Colorize;
 use game_theory::{
-    ai::{AlphaBeta, Heuristic, Minimax, TreeVisitingStrategy},
+    cli::{build_strategy, HeuristicArg, CRITICAL, ERROR, HEURISTIC_LIST, INFO, OK, WARN},
     strip_string, GameState, Player, BOARD_SIDE, BOARD_SQUARES,
 };
-use once_cell::sync::Lazy;
 use std::{
     io::stdin,
     time::{Duration, Instant},
@@ -12,98 +11,44 @@ use std::{
 
 const VERIFICATION_TIMEOUT: Duration = Duration::from_secs(5);
 
-static INFO: Lazy<ColoredString> = Lazy::new(|| "INFO".bright_blue());
-static OK: Lazy<ColoredString> = Lazy::new(|| "OK".bright_green());
-static WARN: Lazy<ColoredString> = Lazy::new(|| "WARN".bright_yellow());
-static ERROR: Lazy<ColoredString> = Lazy::new(|| "ERROR".bright_red());
-static CRITICAL: Lazy<ColoredString> = Lazy::new(|| "CRITICAL".bright_yellow().on_red().bold());
-
-#[derive(Copy, Clone, ValueEnum)]
-enum HeuristicArg {
-    MaxDisc,
-    MinDisc,
-    WMaggs,
-    WSannid,
-    WKorman,
-    CornOwn,
-    CornClose,
-    CurMob,
-    PotMob,
-    FrontDisc,
-    IntStab,
-    EdgeStab,
-    Stab,
-    Iago,
-    Korman,
-}
-
-impl From<HeuristicArg> for Heuristic {
-    fn from(value: HeuristicArg) -> Self {
-        use {Heuristic as H, HeuristicArg as HA};
-        match value {
-            HA::MaxDisc => H::MaximumDisc,
-            HA::MinDisc => H::MinimumDisc,
-            HA::WMaggs => H::W_MAGGS,
-            HA::WSannid => H::W_SANNIDHANAM,
-            HA::WKorman => H::W_KORMAN,
-            HA::CornOwn => H::CornersOwned,
-            HA::CornClose => H::CornerCloseness,
-            HA::CurMob => H::CurrentMobility,
-            HA::PotMob => H::PotentialMobility,
-            HA::FrontDisc => H::FrontierDiscs,
-            HA::IntStab => H::InternalStability,
-            HA::EdgeStab => H::EdgeStability,
-            HA::Stab => H::Stability,
-            HA::Iago => H::Iago,
-            HA::Korman => H::Korman,
-        }
-    }
-}
-
-static HEURISTICS: Lazy<String> = Lazy::new(|| {
-    let mut text = String::from("Available heuristics:\n");
-    for chunk in HeuristicArg::value_variants()
-        .iter()
-        .filter_map(|v| v.to_possible_value())
-        .collect::<Vec<_>>()
-        .chunks(3)
-    {
-        for value in chunk {
-            text += &format!("- {:32}", value.get_name());
-        }
-        text += "\n";
-    }
-    text
-});
-
 #[derive(Parser)]
-#[clap(after_help = &*HEURISTICS)]
+#[clap(after_help = &*HEURISTIC_LIST)]
 struct Args {
     /// Heuristic for player 1
-    #[arg(long = "bh", default_value = "korman", hide_possible_values = true)]
+    #[arg(
+        long = "bh",
+        default_value = "korman",
+        hide_possible_values = true,
+        help_heading = "Player 1"
+    )]
     black_heuristic: HeuristicArg,
 
     /// Max recursion depth for player 1 in range 1..=10
-    #[arg(long = "bd", default_value_t = 5, value_parser = value_parser!(u32).range(1..=10))]
+    #[arg(long = "bd", default_value_t = 5, value_parser = value_parser!(u32).range(1..=10), help_heading = "Player 1")]
     black_depth: u32,
 
     /// Disable alpha-beta pruning for player 1 (use pure Minmax)
-    #[arg(long = "bm")]
+    #[arg(long = "bm", help_heading = "Player 1")]
     no_black_pruning: bool,
 
     /// Heuristic for player 2
-    #[arg(long = "wh", default_value = "korman", hide_possible_values = true)]
+    #[arg(
+        long = "wh",
+        default_value = "korman",
+        hide_possible_values = true,
+        help_heading = "Player 2"
+    )]
     white_heuristic: HeuristicArg,
 
     /// Max recursion depth for player 2 in range 1..=10
-    #[arg(long = "wd", default_value_t = 5, value_parser = value_parser!(u32).range(1..=10))]
+    #[arg(long = "wd", default_value_t = 5, value_parser = value_parser!(u32).range(1..=10), help_heading = "Player 2")]
     white_depth: u32,
 
     /// Disable alpha-beta pruning for player 2 (use pure Minmax)
-    #[arg(long = "wm")]
+    #[arg(long = "wm", help_heading = "Player 2")]
     no_white_pruning: bool,
 
-    /// Don't print the recognized game state
+    /// Don't print the initial info
     #[arg(short = 'i', long)]
     no_initial: bool,
 
@@ -143,34 +88,12 @@ fn verify_board(gs: &GameState) {
     }
 }
 
-fn build_strategy(
-    heuristic: HeuristicArg,
-    depth: u32,
-    no_pruning: bool,
-) -> Box<dyn TreeVisitingStrategy> {
-    let heuristic = heuristic.into();
-    if no_pruning {
-        Box::new(Minimax::new(heuristic, depth))
-    } else {
-        Box::new(AlphaBeta::new(heuristic, depth))
-    }
-}
-
 fn main() {
     let args = Args::parse();
     let Some(mut gs) = board_prompt() else {
         println!("{} Invalid board string! Aborting...", *CRITICAL);
         return;
     };
-
-    if !args.no_initial {
-        println!("{} Recognized game state:", *INFO);
-        print!("{gs}");
-    }
-
-    if !args.no_verification {
-        verify_board(&gs);
-    }
 
     let black_strat = build_strategy(
         args.black_heuristic,
@@ -182,6 +105,17 @@ fn main() {
         args.white_depth,
         args.no_white_pruning,
     );
+
+    if !args.no_initial {
+        println!("{} Player 1: {}", *INFO, black_strat);
+        println!("{} Player 2: {}", *INFO, white_strat);
+        println!("{} Recognized game state:", *INFO);
+        print!("{gs}");
+    }
+
+    if !args.no_verification {
+        verify_board(&gs);
+    }
 
     let start = Instant::now();
     while gs.outcome().is_none() {

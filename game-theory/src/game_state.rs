@@ -256,16 +256,24 @@ impl Display for GameState {
             writeln!(f)?;
         }
 
+        let outcome = self.outcome();
+
+        let (move_number, turn) = if outcome.is_none() {
+            (self.move_number().to_string(), self.turn.to_string())
+        } else {
+            (String::from("--"), String::from("-----"))
+        };
+
         writeln!(
             f,
-            "Move number: {} | Turn: {} | Score: {}-{} | Winner: {}",
-            self.move_number(),
-            self.turn,
+            "Move number: {move_number:>2} | Turn: {turn} | Score: {} {:>2}-{:<2} {} | Winner: {}",
+            "B".bright_black(),
             self.score_of(Player::Black).to_string().bright_black(),
             self.score_of(Player::White).to_string().bright_white(),
-            self.outcome()
+            "W".bright_white(),
+            outcome
                 .map(|o| o.to_string())
-                .unwrap_or(String::from("---"))
+                .unwrap_or(String::from("-----"))
         )
     }
 }
