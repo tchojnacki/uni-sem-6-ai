@@ -12,7 +12,7 @@ mod weights;
 pub use alpha_beta::AlphaBeta;
 pub use corners_greedy::CornersGreedy;
 pub use first_move::FirstMove;
-pub use heuristics::Heuristic;
+pub use heuristics::{linear_hash, Heuristic, LINEAR_WEIGHT_LEN};
 pub use minimax::Minimax;
 pub use player_input::PlayerInput;
 pub use random_move::RandomMove;

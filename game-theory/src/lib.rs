@@ -1,6 +1,7 @@
 pub mod ai;
 pub mod bitboard;
 pub mod cli;
+pub mod elo;
 mod game_state;
 mod outcome;
 mod player;

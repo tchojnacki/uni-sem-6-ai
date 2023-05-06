@@ -5,8 +5,9 @@ use crate::{
 };
 use std::{
     cmp::Ordering,
-    collections::HashSet,
+    collections::{hash_map::DefaultHasher, HashSet},
     fmt::{self, Display},
+    hash::{Hash, Hasher},
 };
 
 pub const MAX_PLAYER: Player = Player::Black;
@@ -21,6 +22,26 @@ impl Outcome {
             Outcome::Draw => 0.,
         }
     }
+}
+
+pub const LINEAR_WEIGHT_LEN: usize = 16;
+const LINEAR_COMPONENTS: [Heuristic; LINEAR_WEIGHT_LEN / 2] = [
+    Heuristic::MaximumDisc,
+    Heuristic::CornersOwned,
+    Heuristic::CornerCloseness,
+    Heuristic::CurrentMobility,
+    Heuristic::PotentialMobility,
+    Heuristic::FrontierDiscs,
+    Heuristic::InternalStability,
+    Heuristic::EdgeStability,
+];
+
+pub fn linear_hash(weights: &[f64; LINEAR_WEIGHT_LEN]) -> u8 {
+    let mut state = DefaultHasher::new();
+    for w in weights {
+        w.to_bits().hash(&mut state);
+    }
+    state.finish() as u8
 }
 
 #[non_exhaustive]
@@ -56,6 +77,8 @@ pub enum Heuristic {
     /// - AKA: s
     Stability,
     /// - First mention: Rosenbloom 1982
+    LinearEquations(Box<[f64; LINEAR_WEIGHT_LEN]>),
+    /// - First mention: Rosenbloom 1982
     Iago,
     /// - First mention: Korman 2003
     Korman,
@@ -76,6 +99,7 @@ impl Display for Heuristic {
             InternalStability => write!(f, "InStab"),
             EdgeStability => write!(f, "EdStab"),
             Stability => write!(f, "Stab"),
+            LinearEquations(m_and_b) => write!(f, "LinEq({:03})", linear_hash(m_and_b)),
             Iago => write!(f, "IAGO"),
             Korman => write!(f, "KORMAN"),
         }
@@ -83,9 +107,36 @@ impl Display for Heuristic {
 }
 
 impl Heuristic {
-    pub const W_MAGGS: Heuristic = Heuristic::Weighted("MAGGS", &WEIGHTS_MAGGS);
-    pub const W_SANNIDHANAM: Heuristic = Heuristic::Weighted("SANNIDHANAM", &WEIGHTS_SANNIDHANAM);
-    pub const W_KORMAN: Heuristic = Heuristic::Weighted("KORMAN", &WEIGHTS_KORMAN);
+    pub const W_MAGGS: Self = Self::Weighted("MAGGS", &WEIGHTS_MAGGS);
+    pub const W_SANNIDHANAM: Self = Self::Weighted("SANNIDHANAM", &WEIGHTS_SANNIDHANAM);
+    pub const W_KORMAN: Self = Self::Weighted("KORMAN", &WEIGHTS_KORMAN);
+
+    #[rustfmt::skip]
+    #[must_use]
+    pub fn lineq1() -> Self {
+        Self::LinearEquations(Box::new([
+            -0.27, 0.07, 0.18, -1.01, 0.72, -0.44, 0.47, -0.37,
+            0.06, -0.30, -0.06, 1.13, 0.87, 0.11, 0.71, -0.67,
+        ]))
+    }
+
+    #[rustfmt::skip]
+    #[must_use]
+    pub fn lineq2() -> Self {
+        Self::LinearEquations(Box::new([
+            0.28, 0.52, 0.49, 0.55, 1.01, 0.69, 0.44, 0.80,
+            0.49, -0.73, -0.26, -0.90, 0.67, -0.41, 0.48, 0.61,
+        ]))
+    }
+
+    #[rustfmt::skip]
+    #[must_use]
+    pub fn lineq3() -> Self {
+        Self::LinearEquations(Box::new([
+            -0.36, 0.04, 0.20, -0.29, 0.71, -0.36, 0.40, -0.05,
+            0.03, -0.36, -0.09, 1.13, 0.86, 0.14, 0.77, 0.80,
+        ]))
+    }
 
     #[must_use]
     pub fn evaluate(&self, gs: &GameState) -> f64 {
@@ -139,7 +190,18 @@ impl Heuristic {
             InternalStability => Self::stability_ratio(gs, bb::INTERNAL),
             EdgeStability => Self::stability_ratio(gs, bb::EDGES),
             Stability => Self::stability_ratio(gs, bb::FULL),
-            Iago => Self::linear_combination(
+            LinearEquations(m_and_b) => Self::weighted_average(
+                gs,
+                &m_and_b
+                    .chunks(2)
+                    .map(|chunk| match chunk {
+                        [m, b] => m * gs.move_number() as f64 + b,
+                        _ => unreachable!(),
+                    })
+                    .zip(LINEAR_COMPONENTS)
+                    .collect::<Vec<_>>(),
+            ),
+            Iago => Self::weighted_average(
                 gs, // Weights from: Rosenbloom 1982
                 &[
                     (Self::esac(gs.move_number()), EdgeStability),
@@ -148,7 +210,7 @@ impl Heuristic {
                     (99., PotentialMobility),
                 ],
             ),
-            Korman => Self::linear_combination(
+            Korman => Self::weighted_average(
                 gs, // Weights from: Korman 2003
                 &[
                     (802., CornersOwned),
@@ -175,7 +237,7 @@ impl Heuristic {
     }
 
     #[must_use]
-    fn linear_combination(gs: &GameState, factors: &[(f64, Heuristic)]) -> f64 {
+    fn weighted_average(gs: &GameState, factors: &[(f64, Heuristic)]) -> f64 {
         factors.iter().map(|(w, h)| w * h.evaluate(gs)).sum::<f64>()
             / factors.iter().map(|(w, _)| w).sum::<f64>()
     }

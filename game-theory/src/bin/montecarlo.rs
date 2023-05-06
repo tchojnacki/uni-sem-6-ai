@@ -3,6 +3,7 @@ use game_theory::{
     ai::{
         AlphaBeta, CornersGreedy, FirstMove, Heuristic, Minimax, RandomMove, ScoreGreedy, Strategy,
     },
+    elo::{elo_update, INITIAL_ELO},
     GameState, Outcome, Player,
 };
 use rand::{thread_rng, Rng};
@@ -12,20 +13,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-const ELO_K: f64 = 32.;
-const INITIAL_ELO: i32 = 1000;
-
-fn elo_probability(loser: i32, winner: i32) -> f64 {
-    1. / (1. + 10f64.powf((loser as f64 - winner as f64) / 400.))
-}
-
-fn elo_update(ratings: &mut [i32], wi: usize, li: usize) {
-    let pw = elo_probability(ratings[li], ratings[wi]);
-    let pl = elo_probability(ratings[wi], ratings[li]);
-    ratings[wi] += (ELO_K * (1. - pw)) as i32;
-    ratings[li] += (-pl * ELO_K) as i32;
-}
-
 fn run_tournament(name: &str, strats: &[&dyn Strategy], timeout: Duration) {
     let strat_count = strats.len();
     let strats = Arc::new(strats);
@@ -34,8 +21,8 @@ fn run_tournament(name: &str, strats: &[&dyn Strategy], timeout: Duration) {
     let start = Instant::now();
 
     let (tx, rx) = channel();
+    let threads = available_parallelism().map(|n| n.get()).unwrap_or(1);
     scope(|s| {
-        let threads = available_parallelism().map(|n| n.get()).unwrap_or(1);
         for _ in 0..threads {
             let tx = tx.clone();
             let strats = strats.clone();
@@ -171,6 +158,9 @@ fn main() {
             &AlphaBeta::new(Heuristic::CurrentMobility, 4),
             &AlphaBeta::new(Heuristic::Korman, 4),
             &AlphaBeta::new(Heuristic::Iago, 4),
+            &AlphaBeta::new(Heuristic::lineq1(), 4),
+            &AlphaBeta::new(Heuristic::lineq2(), 4),
+            &AlphaBeta::new(Heuristic::lineq3(), 4),
         ],
         Duration::from_secs(300),
     );
