@@ -45,11 +45,6 @@ pub const fn valid_moves(current: Bitboard, opponent: Bitboard) -> Bitboard {
     }
 }
 
-#[must_use]
-pub fn potential_moves(current: Bitboard, opponent: Bitboard) -> Bitboard {
-    neighbours(opponent) & !(current | opponent)
-}
-
 pub fn make_move(position: Position, current: &mut Bitboard, opponent: &mut Bitboard) {
     let position = from_pos(position);
     if valid_moves(*current, *opponent) & position == EMPTY {

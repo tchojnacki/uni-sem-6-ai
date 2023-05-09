@@ -10,14 +10,14 @@ use game_theory::{
     },
 };
 use rand::{thread_rng, Rng};
+use std::fmt::Write;
 use std::{cmp::Ordering, time::Duration};
 
 const MINIMAX_DEPTH: u32 = 3;
-const TIME_PER_GEN: Duration = Duration::from_secs(30);
-const GEN_COUNT: usize = 100;
+const TIME_PER_GEN: Duration = Duration::from_secs(60);
 
 const POPULATION_SIZE: usize = 100;
-const ELITISM_SIZE: usize = 20;
+const ELITISM_SIZE: usize = 25;
 const FRESH_SIZE: usize = 10;
 const MUTATION_MAGNITUDE: f64 = 0.1;
 
@@ -27,12 +27,14 @@ fn random_chromosome() -> Chromosome {
     [0.; LINEAR_WEIGHT_LEN].map(|_| thread_rng().gen_range(-1. ..=1.))
 }
 
-fn print_chromosome(chromosome: &Chromosome) {
-    print!("[{:.2}", chromosome[0]);
+fn chromosome_string(chromosome: &Chromosome) -> String {
+    let mut result = String::from("[");
+    write!(result, "{:.3}", chromosome[0]).unwrap();
     for &gene in chromosome.iter().skip(1) {
-        print!(",{gene:.2}");
+        write!(result, ",{gene:.3}").unwrap();
     }
-    println!("]");
+    result.push(']');
+    result
 }
 
 fn main() {
@@ -40,7 +42,7 @@ fn main() {
         .map(|_| random_chromosome())
         .collect::<Vec<_>>();
 
-    for generation in 1..=GEN_COUNT {
+    for generation in 1.. {
         println!("Training generation #{generation}...");
 
         let strategies = population
@@ -72,13 +74,13 @@ fn main() {
         println!("Generation #{generation} best individuals:");
         for i in 0..5 {
             println!(
-                "{}. LinEq({:03}), {:>4} MMR",
+                "{}. LinEq({:03}), {:>4} MMR\n   = {}",
                 i + 1,
                 linear_hash(&population[i]),
-                fitness[i]
+                fitness[i],
+                chromosome_string(&population[i])
             );
         }
-        print_chromosome(&population[0]);
 
         let fitness_sum = fitness.iter().sum::<i32>() as f64;
         let acc_fitness = fitness

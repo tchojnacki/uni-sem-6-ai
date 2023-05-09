@@ -20,12 +20,16 @@ pub enum HeuristicArg {
     CornClose,
     CurMob,
     PotMob,
-    FrontDisc,
     IntStab,
     EdgeStab,
     Stab,
     Iago,
     Korman,
+    Le051,
+    Le064,
+    Le148,
+    Le162,
+    Le215,
 }
 
 impl From<HeuristicArg> for Heuristic {
@@ -35,18 +39,22 @@ impl From<HeuristicArg> for Heuristic {
             HA::MaxDisc => H::MaximumDisc,
             HA::MinDisc => H::MinimumDisc,
             HA::WMaggs => H::W_MAGGS,
-            HA::WSannid => H::W_SANNIDHANAM,
+            HA::WSannid => H::W_VAISHU_MUTHU,
             HA::WKorman => H::W_KORMAN,
             HA::CornOwn => H::CornersOwned,
             HA::CornClose => H::CornerCloseness,
             HA::CurMob => H::CurrentMobility,
             HA::PotMob => H::PotentialMobility,
-            HA::FrontDisc => H::FrontierDiscs,
             HA::IntStab => H::InternalStability,
             HA::EdgeStab => H::EdgeStability,
             HA::Stab => H::Stability,
             HA::Iago => H::Iago,
             HA::Korman => H::Korman,
+            HA::Le051 => H::le051(),
+            HA::Le064 => H::le064(),
+            HA::Le148 => H::le148(),
+            HA::Le162 => H::le162(),
+            HA::Le215 => H::le215(),
         }
     }
 }

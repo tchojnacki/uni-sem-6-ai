@@ -1,4 +1,4 @@
-use super::weights::{WeightMatrix, WEIGHTS_KORMAN, WEIGHTS_MAGGS, WEIGHTS_SANNIDHANAM};
+use super::weights::{WeightMatrix, WEIGHTS_KORMAN, WEIGHTS_MAGGS, WEIGHTS_VAISHU_MUTHU};
 use crate::game::{
     bitboard::{self as bb, Bitboard},
     GameState, Outcome, Player, BOARD_SQUARES,
@@ -24,14 +24,13 @@ impl Outcome {
     }
 }
 
-pub const LINEAR_WEIGHT_LEN: usize = 16;
+pub const LINEAR_WEIGHT_LEN: usize = 14;
 const LINEAR_COMPONENTS: [Heuristic; LINEAR_WEIGHT_LEN / 2] = [
     Heuristic::MaximumDisc,
     Heuristic::CornersOwned,
     Heuristic::CornerCloseness,
     Heuristic::CurrentMobility,
     Heuristic::PotentialMobility,
-    Heuristic::FrontierDiscs,
     Heuristic::InternalStability,
     Heuristic::EdgeStability,
 ];
@@ -65,15 +64,13 @@ pub enum Heuristic {
     /// - AKA: m, mobility, actual mobility
     CurrentMobility,
     /// - First mention: Rosenbloom 1982
+    /// - AKA: f, frontier discs
     PotentialMobility,
-    /// - First mention: Rosenbloom 1982
-    /// - AKA: f
-    FrontierDiscs,
     /// - First mention: Rosenbloom 1982
     InternalStability,
     /// - First mention: Rosenbloom 1982
     EdgeStability,
-    /// - First mention: Korman 2003
+    /// - First mention: Rosenbloom 1982 tylko jednego sąsiada.
     /// - AKA: s
     Stability,
     /// - First mention: Rosenbloom 1982
@@ -95,7 +92,6 @@ impl Display for Heuristic {
             CornerCloseness => write!(f, "CrCls"),
             CurrentMobility => write!(f, "CurMob"),
             PotentialMobility => write!(f, "PotMob"),
-            FrontierDiscs => write!(f, "Front"),
             InternalStability => write!(f, "InStab"),
             EdgeStability => write!(f, "EdStab"),
             Stability => write!(f, "Stab"),
@@ -108,35 +104,28 @@ impl Display for Heuristic {
 
 impl Heuristic {
     pub const W_MAGGS: Self = Self::Weighted("MAGGS", &WEIGHTS_MAGGS);
-    pub const W_SANNIDHANAM: Self = Self::Weighted("SANNIDHANAM", &WEIGHTS_SANNIDHANAM);
+    pub const W_VAISHU_MUTHU: Self = Self::Weighted("VAISHU&MUTHU", &WEIGHTS_VAISHU_MUTHU);
     pub const W_KORMAN: Self = Self::Weighted("KORMAN", &WEIGHTS_KORMAN);
+    
+    #[rustfmt::skip]
+    #[must_use]
+    pub fn le051() -> Self { Self::LinearEquations(Box::new([-0.064,-0.065,0.106,0.746,0.928,0.101,0.183,0.183,0.427,1.047,0.093,0.897,1.096,0.707])) }
+    
+    #[rustfmt::skip]
+    #[must_use]
+    pub fn le064() -> Self { Self::LinearEquations(Box::new([-0.088,-1.444,0.029,0.857,1.546,1.019,0.088,0.985,0.064,0.307,0.457,0.013,0.908,0.133])) }
+ 
+    #[rustfmt::skip]
+    #[must_use]
+    pub fn le148() -> Self { Self::LinearEquations(Box::new([-0.198,0.553,0.755,0.602,0.345,-1.263,0.445,0.253,0.305,0.659,0.545,-0.061,0.782,-0.200])) }
+   
+    #[rustfmt::skip]
+    #[must_use]
+    pub fn le162() -> Self { Self::LinearEquations(Box::new([-0.250,-1.468,1.044,0.828,1.556,-1.389,0.625,0.700,0.023,0.347,0.246,0.053,1.078,0.325])) }
 
     #[rustfmt::skip]
     #[must_use]
-    pub fn lineq1() -> Self {
-        Self::LinearEquations(Box::new([
-            -0.27, 0.07, 0.18, -1.01, 0.72, -0.44, 0.47, -0.37,
-            0.06, -0.30, -0.06, 1.13, 0.87, 0.11, 0.71, -0.67,
-        ]))
-    }
-
-    #[rustfmt::skip]
-    #[must_use]
-    pub fn lineq2() -> Self {
-        Self::LinearEquations(Box::new([
-            0.28, 0.52, 0.49, 0.55, 1.01, 0.69, 0.44, 0.80,
-            0.49, -0.73, -0.26, -0.90, 0.67, -0.41, 0.48, 0.61,
-        ]))
-    }
-
-    #[rustfmt::skip]
-    #[must_use]
-    pub fn lineq3() -> Self {
-        Self::LinearEquations(Box::new([
-            -0.36, 0.04, 0.20, -0.29, 0.71, -0.36, 0.40, -0.05,
-            0.03, -0.36, -0.09, 1.13, 0.86, 0.14, 0.77, 0.80,
-        ]))
-    }
+    pub fn le215() -> Self { Self::LinearEquations(Box::new([-0.192,0.677,0.495,0.147,1.286,-0.197,0.545,0.307,0.128,0.666,0.596,-0.502,0.846,-0.485])) }
 
     #[must_use]
     pub fn evaluate(&self, gs: &GameState) -> f64 {
@@ -179,11 +168,7 @@ impl Heuristic {
                 bb::valid_moves(max_bb, min_bb).count_ones(),
                 bb::valid_moves(min_bb, max_bb).count_ones(),
             ),
-            PotentialMobility => Self::ratio(
-                bb::potential_moves(max_bb, min_bb).count_ones(),
-                bb::potential_moves(min_bb, max_bb).count_ones(),
-            ),
-            FrontierDiscs => -Self::ratio(
+            PotentialMobility => -Self::ratio(
                 (bb::neighbours(max_bb) & gs.empty_bb()).count_ones(),
                 (bb::neighbours(min_bb) & gs.empty_bb()).count_ones(),
             ),
@@ -218,7 +203,7 @@ impl Heuristic {
                     (79., CurrentMobility),
                     (10., MaximumDisc),
                     (26., Self::W_KORMAN),
-                    (74., FrontierDiscs),
+                    (74., PotentialMobility),
                     (100., Stability),
                 ],
             ),
@@ -321,13 +306,12 @@ mod tests {
                 MaximumDisc,
                 MinimumDisc,
                 Heuristic::W_MAGGS,
-                Heuristic::W_SANNIDHANAM,
+                Heuristic::W_VAISHU_MUTHU,
                 Heuristic::W_KORMAN,
                 CornersOwned,
                 CornerCloseness,
                 CurrentMobility,
                 PotentialMobility,
-                FrontierDiscs,
                 InternalStability,
                 EdgeStability,
                 Stability,

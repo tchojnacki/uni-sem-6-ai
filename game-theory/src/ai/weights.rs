@@ -15,7 +15,7 @@ pub const WEIGHTS_MAGGS: WeightMatrix = [
 ];
 
 #[rustfmt::skip]
-pub const WEIGHTS_SANNIDHANAM: WeightMatrix = [
+pub const WEIGHTS_VAISHU_MUTHU: WeightMatrix = [
      4, -3,  2,  2,  2,  2, -3,  4,
     -3, -4, -1, -1, -1, -1, -4, -3,
      2, -1,  1,  0,  0,  1, -1,  2,
