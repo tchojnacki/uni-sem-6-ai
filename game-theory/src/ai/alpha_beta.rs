@@ -1,8 +1,8 @@
 use super::{
-    heuristics::{Heuristic, MAX_PLAYER, MIN_PLAYER},
-    strategy::{Strategy, TreeVisitingStrategy},
+    heuristics::{MAX_PLAYER, MIN_PLAYER},
+    Heuristic, Strategy, TreeVisitingStrategy,
 };
-use crate::{GameState, Position};
+use crate::game::{GameState, Position};
 use std::{
     cmp::Ordering,
     fmt::{self, Display},
@@ -76,7 +76,7 @@ impl Display for AlphaBeta {
 }
 
 impl Strategy for AlphaBeta {
-    fn decide(&self, gs: &GameState) -> crate::Position {
+    fn decide(&self, gs: &GameState) -> Position {
         let (_, pos) = self.alpha_beta(gs, self.max_depth, f64::NEG_INFINITY, f64::INFINITY);
         pos.unwrap()
     }

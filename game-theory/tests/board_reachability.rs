@@ -1,4 +1,4 @@
-use game_theory::GameState;
+use game_theory::game::GameState;
 use std::time::Duration;
 
 const TIMEOUT: Duration = Duration::from_secs(1);

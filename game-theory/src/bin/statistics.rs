@@ -1,6 +1,6 @@
 use game_theory::{
     ai::{RandomMove, Strategy},
-    GameState, Player, BOARD_SQUARES,
+    game::{GameState, Player, BOARD_SQUARES},
 };
 use std::{cmp::Ordering, collections::HashSet};
 

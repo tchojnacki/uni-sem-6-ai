@@ -1,4 +1,4 @@
-use crate::{Position, BOARD_SQUARES};
+use super::{Position, BOARD_SQUARES};
 
 pub type Bitboard = u64;
 
@@ -119,7 +119,7 @@ mod dumb7fill {
     // https://www.chessprogramming.org/General_Setwise_Operations
 
     use super::{Bitboard, FULL};
-    use crate::BOARD_SIDE;
+    use crate::game::BOARD_SIDE;
 
     // Compass rose is different than in chess, because Reversi ranks grow south, not north.
     const EAST: i32 = 1; // +1

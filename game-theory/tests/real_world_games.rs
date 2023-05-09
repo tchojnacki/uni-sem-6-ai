@@ -1,4 +1,4 @@
-use game_theory::{GameState, Outcome, Player, Position};
+use game_theory::game::{GameState, Outcome, Player, Position};
 
 fn from_transcript(transcript: &'static str) -> GameState {
     let mut gs = GameState::othello_initial();

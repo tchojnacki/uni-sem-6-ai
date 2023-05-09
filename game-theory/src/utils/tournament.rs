@@ -1,4 +1,7 @@
-use crate::{ai::Strategy, GameState, Outcome, Player};
+use crate::{
+    ai::Strategy,
+    game::{GameState, Outcome, Player},
+};
 use rand::{thread_rng, Rng};
 use std::{
     sync::mpsc::{channel, Receiver},

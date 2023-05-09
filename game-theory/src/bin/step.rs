@@ -1,7 +1,7 @@
 use clap::{value_parser, ArgAction, Parser, ValueEnum};
 use game_theory::{
-    cli::{build_strategy, HeuristicArg, HEURISTIC_LIST},
-    GameState, Player, Position,
+    game::{GameState, Player, Position},
+    utils::cli::{build_strategy, HeuristicArg, HEURISTIC_LIST},
 };
 use std::{io::stdin, thread, time::Duration};
 

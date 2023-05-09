@@ -1,11 +1,10 @@
 use crate::{
     ai::{RandomMove, Strategy},
-    bitboard::{self as bb, Bitboard},
-    player::Player,
-    position::{Position, BOARD_SIDE, BOARD_SQUARES},
-    square::Square,
-    styles::{strip_string, EMPTY_BG, VALID_FG},
-    Outcome,
+    game::{
+        bitboard::{self as bb, Bitboard},
+        Outcome, Player, Position, Square, BOARD_SIDE, BOARD_SQUARES,
+    },
+    utils::styles::{strip_string, EMPTY_BG, VALID_FG},
 };
 use colored::Colorize;
 use rand::{thread_rng, Rng};
@@ -281,7 +280,7 @@ impl Display for GameState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::position::p;
+    use crate::game::position::p;
     use quickcheck::Arbitrary;
     use quickcheck_macros::quickcheck;
 

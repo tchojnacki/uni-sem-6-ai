@@ -1,8 +1,8 @@
 use super::{
-    heuristics::{Heuristic, MAX_PLAYER, MIN_PLAYER},
-    strategy::{Strategy, TreeVisitingStrategy},
+    heuristics::{MAX_PLAYER, MIN_PLAYER},
+    Heuristic, Strategy, TreeVisitingStrategy,
 };
-use crate::{GameState, Position};
+use crate::game::{GameState, Position};
 use std::{
     cmp::Ordering,
     fmt::{self, Display},
@@ -61,7 +61,7 @@ impl Display for Minimax {
 }
 
 impl Strategy for Minimax {
-    fn decide(&self, gs: &GameState) -> crate::Position {
+    fn decide(&self, gs: &GameState) -> Position {
         let (_, pos) = self.minimax(gs, self.max_depth);
         pos.unwrap()
     }

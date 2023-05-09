@@ -1,5 +1,5 @@
 use super::weights::{WeightMatrix, WEIGHTS_KORMAN, WEIGHTS_MAGGS, WEIGHTS_SANNIDHANAM};
-use crate::{
+use crate::game::{
     bitboard::{self as bb, Bitboard},
     GameState, Outcome, Player, BOARD_SQUARES,
 };

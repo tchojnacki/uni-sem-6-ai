@@ -1,4 +1,4 @@
-use crate::BOARD_SQUARES;
+use crate::game::BOARD_SQUARES;
 
 pub type WeightMatrix = [i32; BOARD_SQUARES];
 

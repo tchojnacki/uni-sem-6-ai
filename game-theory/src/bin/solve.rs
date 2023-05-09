@@ -1,8 +1,11 @@
 use clap::{value_parser, Parser};
 use colored::Colorize;
 use game_theory::{
-    cli::{build_strategy, HeuristicArg, CRITICAL, ERROR, HEURISTIC_LIST, INFO, OK, WARN},
-    strip_string, GameState, Player, BOARD_SIDE, BOARD_SQUARES,
+    game::{GameState, Player, BOARD_SIDE, BOARD_SQUARES},
+    utils::{
+        cli::{build_strategy, HeuristicArg, CRITICAL, ERROR, HEURISTIC_LIST, INFO, OK, WARN},
+        styles::strip_string,
+    },
 };
 use std::{
     io::stdin,

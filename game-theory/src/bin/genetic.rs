@@ -1,7 +1,13 @@
 use game_theory::{
-    ai::{linear_hash, AlphaBeta, Heuristic, LINEAR_WEIGHT_LEN},
-    elo::{elo_update, INITIAL_ELO},
-    run_tournament, Outcome, Player,
+    ai::{
+        heuristics::{linear_hash, LINEAR_WEIGHT_LEN},
+        AlphaBeta, Heuristic,
+    },
+    game::{Outcome, Player},
+    utils::{
+        elo::{elo_update, INITIAL_ELO},
+        tournament::run_tournament,
+    },
 };
 use rand::{thread_rng, Rng};
 use std::{cmp::Ordering, time::Duration};

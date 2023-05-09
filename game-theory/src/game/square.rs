@@ -1,6 +1,6 @@
 use crate::{
-    player::Player,
-    styles::{BLACK_BG, BLACK_FG, EMPTY_BG, EMPTY_FG, WHITE_BG, WHITE_FG},
+    game::player::Player,
+    utils::styles::{BLACK_BG, BLACK_FG, EMPTY_BG, EMPTY_FG, WHITE_BG, WHITE_FG},
 };
 use colored::Colorize;
 use std::fmt::{self, Display};

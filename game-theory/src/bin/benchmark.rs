@@ -1,6 +1,6 @@
 use game_theory::{
     ai::{RandomMove, Strategy},
-    GameState,
+    game::GameState,
 };
 use std::time::{Duration, Instant};
 

@@ -1,4 +1,4 @@
-use crate::bitboard as bb;
+use super::bitboard as bb;
 use std::fmt::{self, Display};
 
 pub const BOARD_SIDE: usize = 8;

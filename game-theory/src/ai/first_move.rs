@@ -1,5 +1,5 @@
 use super::strategy::Strategy;
-use crate::{GameState, Position};
+use crate::game::{GameState, Position};
 use std::fmt::{self, Display};
 
 #[derive(Default)]

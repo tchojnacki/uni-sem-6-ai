@@ -1,5 +1,5 @@
 use super::strategy::Strategy;
-use crate::{bitboard::has, GameState, Position};
+use crate::game::{bitboard as bb, GameState, Position};
 use std::{
     fmt::{self, Display},
     io::{stdin, stdout, Write},
@@ -25,7 +25,7 @@ impl Strategy for PlayerInput {
             buffer.make_ascii_uppercase();
 
             if let Some(position) = Position::from(buffer.trim()) {
-                if has(gs.move_bb(), position) {
+                if bb::has(gs.move_bb(), position) {
                     return position;
                 } else {
                     println!("Illegal move!");

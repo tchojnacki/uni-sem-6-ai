@@ -3,8 +3,11 @@ use game_theory::{
     ai::{
         AlphaBeta, CornersGreedy, FirstMove, Heuristic, Minimax, RandomMove, ScoreGreedy, Strategy,
     },
-    elo::{elo_update, INITIAL_ELO},
-    run_tournament, Outcome, Player,
+    game::{Outcome, Player},
+    utils::{
+        elo::{elo_update, INITIAL_ELO},
+        tournament::run_tournament,
+    },
 };
 use std::time::Duration;
 

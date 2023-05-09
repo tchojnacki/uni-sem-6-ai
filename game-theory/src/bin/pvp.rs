@@ -1,6 +1,6 @@
 use game_theory::{
     ai::{PlayerInput, Strategy},
-    GameState,
+    game::GameState,
 };
 
 fn main() {

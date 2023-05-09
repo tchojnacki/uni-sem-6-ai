@@ -1,4 +1,4 @@
-use crate::{GameState, Position};
+use crate::game::{GameState, Position};
 use std::fmt::Display;
 
 pub trait Strategy: Display + Sync {
