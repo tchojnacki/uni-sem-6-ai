@@ -1,0 +1,14 @@
+[package]
+name = "game-theory"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.2.7", features = ["derive"] }
+colored = "2.0.0"
+once_cell = "1.17.1"
+rand = "0.8.5"
+
+[dev-dependencies]
+quickcheck = "1.0.3"
+quickcheck_macros = "1.0.0"
