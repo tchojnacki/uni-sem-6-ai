@@ -4,56 +4,17 @@ use game_theory::{
         AlphaBeta, CornersGreedy, FirstMove, Heuristic, Minimax, RandomMove, ScoreGreedy, Strategy,
     },
     elo::{elo_update, INITIAL_ELO},
-    GameState, Outcome, Player,
+    run_tournament, Outcome, Player,
 };
-use rand::{thread_rng, Rng};
-use std::{
-    sync::{mpsc::channel, Arc},
-    thread::{available_parallelism, scope},
-    time::{Duration, Instant},
-};
+use std::time::Duration;
 
-fn run_tournament(name: &str, strats: &[&dyn Strategy], timeout: Duration) {
-    let strat_count = strats.len();
-    let strats = Arc::new(strats);
-
+fn calculate_ratings(name: &str, strats: &[&dyn Strategy], timeout: Duration) {
     println!("{}", name.bright_blue().bold());
-    let start = Instant::now();
+    let rx = run_tournament(strats.len(), timeout, |i| strats[i]);
 
-    let (tx, rx) = channel();
-    let threads = available_parallelism().map(|n| n.get()).unwrap_or(1);
-    scope(|s| {
-        for _ in 0..threads {
-            let tx = tx.clone();
-            let strats = strats.clone();
-            s.spawn(move || {
-                while start.elapsed() <= timeout {
-                    let bi = thread_rng().gen_range(0..strat_count);
-                    let wi = thread_rng().gen_range(0..strat_count);
-                    let mut gs = GameState::random_state_between_inc(3, 5);
-                    if gs.outcome().is_some() || bi == wi {
-                        continue;
-                    }
-
-                    while gs.outcome().is_none() {
-                        let strat = match gs.turn() {
-                            Player::Black => strats[bi],
-                            Player::White => strats[wi],
-                        };
-                        let position = strat.decide(&gs);
-                        gs = gs.make_move(position);
-                    }
-
-                    tx.send((bi, wi, gs.outcome().unwrap())).unwrap();
-                }
-            });
-        }
-    });
-    drop(tx);
-
-    let mut ratings = vec![INITIAL_ELO; strat_count];
-    let mut games = vec![0; strat_count];
-    let mut wins = vec![0; strat_count];
+    let mut ratings = vec![INITIAL_ELO; strats.len()];
+    let mut games = vec![0; strats.len()];
+    let mut wins = vec![0; strats.len()];
     let mut total_games = 0;
     while let Ok((bi, wi, outcome)) = rx.recv() {
         if let Outcome::Winner(winner) = outcome {
@@ -74,8 +35,7 @@ fn run_tournament(name: &str, strats: &[&dyn Strategy], timeout: Duration) {
     }
 
     println!("Played {total_games} games!");
-
-    let mut indices = (0..strat_count).collect::<Vec<_>>();
+    let mut indices = (0..strats.len()).collect::<Vec<_>>();
     indices.sort_by_key(|i| -ratings[*i]);
     for (num, i) in indices.into_iter().enumerate() {
         println!(
@@ -89,7 +49,7 @@ fn run_tournament(name: &str, strats: &[&dyn Strategy], timeout: Duration) {
 }
 
 fn main() {
-    run_tournament(
+    calculate_ratings(
         "NAIVE STRATEGIES",
         &[
             &RandomMove::default(),
@@ -100,7 +60,7 @@ fn main() {
         Duration::from_secs(1),
     );
 
-    run_tournament(
+    calculate_ratings(
         "MINIMAX VS ALPHA-BETA",
         &[
             &Minimax::new(Heuristic::MaximumDisc, 3),
@@ -109,7 +69,7 @@ fn main() {
         Duration::from_secs(10),
     );
 
-    run_tournament(
+    calculate_ratings(
         "WEIGHT MATRIX COMPARISON",
         &[
             &AlphaBeta::new(Heuristic::W_MAGGS, 4),
@@ -119,7 +79,7 @@ fn main() {
         Duration::from_secs(10),
     );
 
-    run_tournament(
+    calculate_ratings(
         "MAX DEPTH COMPARISON",
         &[
             &AlphaBeta::new(Heuristic::Korman, 1),
@@ -131,7 +91,7 @@ fn main() {
         Duration::from_secs(30),
     );
 
-    run_tournament(
+    calculate_ratings(
         "BASIC HEURISTICS",
         &[
             &AlphaBeta::new(Heuristic::MaximumDisc, 3),
@@ -148,7 +108,7 @@ fn main() {
         Duration::from_secs(10),
     );
 
-    run_tournament(
+    calculate_ratings(
         "FULL TOURNAMENT",
         &[
             &RandomMove::default(),

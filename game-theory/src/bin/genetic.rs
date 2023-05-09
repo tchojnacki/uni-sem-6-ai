@@ -1,15 +1,10 @@
 use game_theory::{
-    ai::{linear_hash, AlphaBeta, Heuristic, Strategy, LINEAR_WEIGHT_LEN},
+    ai::{linear_hash, AlphaBeta, Heuristic, LINEAR_WEIGHT_LEN},
     elo::{elo_update, INITIAL_ELO},
-    GameState, Outcome, Player,
+    run_tournament, Outcome, Player,
 };
 use rand::{thread_rng, Rng};
-use std::{
-    cmp::Ordering,
-    sync::mpsc::channel,
-    thread::{available_parallelism, scope},
-    time::{Duration, Instant},
-};
+use std::{cmp::Ordering, time::Duration};
 
 const MINIMAX_DEPTH: u32 = 3;
 const TIME_PER_GEN: Duration = Duration::from_secs(30);
@@ -24,13 +19,6 @@ type Chromosome = [f64; LINEAR_WEIGHT_LEN];
 
 fn random_chromosome() -> Chromosome {
     [0.; LINEAR_WEIGHT_LEN].map(|_| thread_rng().gen_range(-1. ..=1.))
-}
-
-fn strategy(chromosome: &Chromosome) -> AlphaBeta {
-    AlphaBeta::new(
-        Heuristic::LinearEquations(Box::new(*chromosome)),
-        MINIMAX_DEPTH,
-    )
 }
 
 fn print_chromosome(chromosome: &Chromosome) {
@@ -49,41 +37,17 @@ fn main() {
     for generation in 1..=GEN_COUNT {
         println!("Training generation #{generation}...");
 
-        let (tx, rx) = channel();
-        let threads = available_parallelism().map(|n| n.get()).unwrap_or(1);
-        let start = Instant::now();
-        scope(|s| {
-            for _ in 0..threads {
-                let tx = tx.clone();
-                let population = &population;
-                s.spawn(move || {
-                    while start.elapsed() <= TIME_PER_GEN {
-                        let bi = thread_rng().gen_range(0..POPULATION_SIZE);
-                        let wi = thread_rng().gen_range(0..POPULATION_SIZE);
-                        let mut gs = GameState::random_state_between_inc(3, 5);
-                        if gs.outcome().is_some() || bi == wi {
-                            continue;
-                        }
+        let strategies = population
+            .iter()
+            .map(|chromosome| {
+                AlphaBeta::new(
+                    Heuristic::LinearEquations(Box::new(*chromosome)),
+                    MINIMAX_DEPTH,
+                )
+            })
+            .collect::<Vec<_>>();
 
-                        let bs = strategy(&population[bi]);
-                        let ws = strategy(&population[wi]);
-
-                        while gs.outcome().is_none() {
-                            let position = match gs.turn() {
-                                Player::Black => &bs,
-                                Player::White => &ws,
-                            }
-                            .decide(&gs);
-
-                            gs = gs.make_move(position);
-                        }
-
-                        tx.send((bi, wi, gs.outcome().unwrap())).unwrap();
-                    }
-                });
-            }
-        });
-        drop(tx);
+        let rx = run_tournament(POPULATION_SIZE, TIME_PER_GEN, |i| &strategies[i]);
 
         let mut fitness = vec![INITIAL_ELO; POPULATION_SIZE];
         while let Ok((bi, wi, outcome)) = rx.recv() {
