@@ -25,7 +25,6 @@ def_part(top_panel, "Top Panel", [panel], printer).
 def_part(on_light, "On Light", [light], top_panel).
 def_part(status_light, "Status Light", [light], top_panel).
 def_part(battery_light, "Battery Light", [light], top_panel).
-def_part(remote_control, "Remote Control", [], printer).
 
 is_part(Part) :- def_part(Part, _, _, _).
 
@@ -38,7 +37,9 @@ part_tag(Part, Tag) :-
     member(Tag, Tags).
 
 descendant_part(Part, Part).
-descendant_part(Descendant, Part) :- part_parent(Descendant, Parent), descendant_part(Parent, Part).
+descendant_part(Descendant, Part) :-
+    part_parent(Descendant, Parent),
+    descendant_part(Parent, Part).
 
 %%% PROBLEM CATEGORY DEFINITIONS %%%
 
