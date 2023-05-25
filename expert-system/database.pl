@@ -1,3 +1,5 @@
+% Based on the HP Photosmart 420 user manual
+
 % swipl -s database.pl
 % ?- main.
 
@@ -5,13 +7,25 @@
 
 % def_part(Part, Label, Tags, Parent).
 def_part(printer, "Printer", [], null).
+def_part(paper_tray, "Paper Tray", [], printer).
+def_part(cartridge_door, "Cartridge Door", [], printer).
 def_part(internal_battery, "Internal Battery", [battery], printer).
 def_part(camera, "Camera", [], printer).
-def_part(camera_battery, "Camera Battery", [battery], printer).
-def_part(control_panel, "Control Panel", [], printer).
+def_part(camera_battery, "Camera Battery", [battery], camera).
+def_part(camera_button, "Camera Button", [button], camera).
+def_part(control_panel, "Control Panel", [panel], printer).
 def_part(save_button, "Save Button", [button], control_panel).
 def_part(control_button, "Control Button", [button], control_panel).
-def_part(camera_button, "Camera Button", [button], control_panel).
+def_part(on_button, "On Button", [button], control_panel).
+def_part(print_button, "Print Button", [button], control_panel).
+def_part(rear_panel, "Rear Panel", [panel], printer).
+def_part(power_cord, "Power Cord", [port], rear_panel).
+def_part(usb_port, "USB Port", [port], rear_panel).
+def_part(top_panel, "Top Panel", [panel], printer).
+def_part(on_light, "On Light", [light], top_panel).
+def_part(status_light, "Status Light", [light], top_panel).
+def_part(battery_light, "Battery Light", [light], top_panel).
+def_part(remote_control, "Remote Control", [], printer).
 
 is_part(Part) :- def_part(Part, _, _, _).
 part_parent(Part, Parent) :-
@@ -36,16 +50,11 @@ is_category(Category) :- def_category(Category, _).
 % def_problem(Problem, Label, Category).
 
 % HARDWARE
-def_problem(light_flashing_red, "The Status light is flashing red.", hardware).
-def_problem(flash_after_off, "The On light flashed briefly after I turned the printer off.", hardware).
+def_problem(flashing(status_light), "The Status light is flashing red.", hardware).
+def_problem(flashing(on_light), "The On light flashed briefly after I turned the printer off.", hardware).
 def_problem(images_not_found, "The printer does not find and display the images.", hardware).
-def_problem(mac_displays_zero_images, "When the printer is connected to a Mac, iPhoto displays 0 images in the camera.", hardware).
-def_problem(not_all_images_transferred, "Not all the images on camera were transferred to a computer.", hardware).
 def_problem(will_not_turn_on, "The printer will not turn on.", hardware).
 def_problem(printer_makes_noises, "The printer makes noises.", hardware).
-def_problem(remote_not_working, "The remote does not work.", hardware).
-def_problem(camera_not_recognized, "The printer does not recognize the camera.", hardware).
-def_problem(nothing_on_tv, "Nothing is displayed on television.", hardware).
 def_problem(not_responding(Button), Label, hardware) :-
     part_tag(Button, button),
     label(Button, L),
@@ -60,11 +69,6 @@ def_problem(paper_not_feeding, "Printer does not feed into the printer correctly
 def_problem(image_at_angle, "The image is printed at an angle or is off-center.", printing).
 def_problem(no_page_out, "No page came out of the printer.", printing).
 def_problem(paper_jammed, "The paper jammed while printing.", printing).
-def_problem(blank_page_out, "A blank page came out of the printer.", printing).
-def_problem(printer_ejects_paper, "The printer ejects the paper when preparing to print.", printing).
-def_problem(print_quality_poor, "Print quality is poor.", printing).
-def_problem(images_marked_do_not_print, "The images marked for printing in the digital camera do not print.", printing).
-def_problem(commands_dimmed, "Some commands in the menus are dimmed.", printing).
 
 % BLUETOOTH
 def_problem(cannot_find_printer, "My Bluetooth device cannot find the printer.", bluetooth).
@@ -72,9 +76,7 @@ def_problem(image_printed_with_borders, "The image printed with borders.", bluet
 
 % ERRORS
 def_problem(error_open_output, "Open output door or clear paper jam, then press OK.", errors).
-def_problem(error_incompatible_cartridge, "Print cartridge is not compatible. Use appropriate cartridge.", errors).
 def_problem(error_camera_connected, "Already connected to a camera.", errors).
-def_problem(error_computer_connection, "Check computer connection.", errors).
 
 % HELPERS
 is_problem(Problem) :- def_problem(Problem, _, _).
@@ -83,31 +85,98 @@ problem_category(Problem, Category) :-
     def_problem(Problem, _, Category).
 
 %%% FIXES %%%
+
 step(turn_off) :-
     ask("Is the internal battery installed in the printer?"),
     write("- Remove the battery."), nl,
     write("- Wait about 10 seconds."), nl,
     write("- Reinstall the battery.").
-
 step(turn_off) :-
     write("- Unplug the power cord."), nl,
     write("- Wait about 10 seconds."), nl,
     write("- Plug the power cord back in.").
 
-fix(light_flashing_red) :-
+step(adjust_paper) :-
+    write("- Remove some paper from the tray and try again."), nl,
+    write("- Try loading one sheet at a time."), nl,
+    write("- Make sure that the paper guide fits close to the edge.").
+
+step(clear_jam) :-
+    ask("Did the paper come part way through the front?"),
+    write("Gently pull the paper towards you to remove it.").
+step(clear_jam) :-
+    ask("Does the paper partly stick out of the tray?"),
+    write("Try removing the paper from the back of the printer.").
+step(clear_jam) :-
+    write("Restart the printer and it will try to eject the paper."), nl,
+    step(turn_off).
+
+fix(flashing(status_light)) :-
     ask("Is the camera connected?"),
     write("Check camera screen for instructions.").
-
-fix(light_flashing_red) :-
+fix(flashing(status_light)) :-
     ask("Is the printer connected to a computer?"),
     write("Check the computer monitor.").
+fix(flashing(status_light)) :- step(turn_off).
 
-fix(light_flashing_red) :- step(turn_off).
-
-fix(flash_after_off) :-
+fix(flashing(on_light)) :-
     write("This is a normal part of the power-down process."), nl, 
     write("It does not indicate a problem with the printer.").
 
+fix(images_not_found) :-
+    ask("Do filenames comply with the standard file naming convention?"),
+    write("Adjust the filenames.").
+fix(images_not_found) :- step(turn_off).
+
+fix(will_not_turn_on) :-
+    ask("Does the power source comply with power requirements of the printer?"),
+    step(turn_off).
+fix(will_not_turn_on) :- write("Make sure you use a suitable power source.").
+
+fix(printer_makes_noises) :-
+    write("The printer may make noises after long periods of inactivity"), nl,
+    write("or when its power supply has been interrupted and then restored."), nl,
+    write("This is normal operation.").
+
+fix(not_responding(Button)) :-
+    part_parent(Button, Parent),
+    label(Parent, Label),
+    write("An error has occured with the "), write(Label), write("."), nl,
+    write("- Undock and redock the camera."), nl,
+    step(turn_off).
+
+fix(not_charging(Battery)) :-
+    part_parent(Battery, Parent),
+    label(Battery, BLabel),
+    label(Parent, PLabel),
+    write("- Open the "), write(BLabel), write(" compartment in the "), write(PLabel), write("."), nl,
+    write("- Remove the "), write(BLabel), write("."), nl,
+    write("- Wait about 10 seconds."), nl,
+    write("- Reinstall the battery.").
+
+fix(paper_not_feeding) :- step(adjust_paper).
+
+fix(image_at_angle) :- step(adjust_paper).
+
+fix(paper_jammed) :- step(clear_jam).
+
+fix(cannot_find_printer) :-
+    ask("Does the Bluetooth adapter flash?"),
+    write("You may be too far from the printer."), nl,
+    write("Maximum recommended distance is 10 meters.").
+fix(cannot_find_printer) :- write("Make sure the wireless adapter is plugged into the camera port.").
+
+fix(image_printed_with_borders) :- write("Your printing application may not support borderless printing.").
+
+fix(error_open_output) :-
+    step(clear_jam), nl,
+    write("Press Ok to continue.").
+
+fix(error_camera_connected) :-
+    write("Only one camera can be connected at a time."), nl,
+    write("Unplug the previous camera before plugging in a new one.").
+
+% Fallback fix
 fix(_) :- write("No suitable fix found :(").
 
 %%% MENU HELPERS %%%
