@@ -28,12 +28,17 @@ def_part(battery_light, "Battery Light", [light], top_panel).
 def_part(remote_control, "Remote Control", [], printer).
 
 is_part(Part) :- def_part(Part, _, _, _).
+
 part_parent(Part, Parent) :-
     is_part(Parent),
     def_part(Part, _, _, Parent).
+
 part_tag(Part, Tag) :-
     def_part(Part, _, Tags, _),
     member(Tag, Tags).
+
+descendant_part(Part, Part).
+descendant_part(Descendant, Part) :- part_parent(Descendant, Parent), descendant_part(Parent, Part).
 
 %%% PROBLEM CATEGORY DEFINITIONS %%%
 
@@ -80,6 +85,7 @@ def_problem(error_camera_connected, "Already connected to a camera.", errors).
 
 % HELPERS
 is_problem(Problem) :- def_problem(Problem, _, _).
+
 problem_category(Problem, Category) :-
     is_category(Category),
     def_problem(Problem, _, Category).
