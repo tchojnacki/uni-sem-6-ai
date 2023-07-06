@@ -40,7 +40,7 @@
   - [Breadth-First Search (BFS)](https://en.wikipedia.org/wiki/Breadth-first_search)
   - [Dijkstra's Algorithm / Uniform Cost Search](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm)
   - [A* Search](https://en.wikipedia.org/wiki/A*_search_algorithm) (with various heuristics and optimizations)
-  - [Tabu Search](https://en.wikipedia.org/wiki/Tabu_search)
+  - [Tabu Search](https://en.wikipedia.org/wiki/Tabu_search) (with modifications)
 - **Key features:**
   - Parsing and building a giant digraph from a `.csv` edge file.
     - Automatic transformation from a [time-dependent graph](https://link.springer.com/article/10.1007/s41019-019-00105-0) to a static graph.
@@ -62,3 +62,34 @@
   - Path finding with intermediate destinations using a hybrid of Tabu Search and A* ([travelling salesman problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem)).
   - A total of 1.5k lines of Rust source code.
   - Covered by around 20 unit tests checking all of the core app logic.
+
+### LAB2: Adversarial search and games
+- **Assignment:** Create a terminal implementation of the game of [Reversi](https://en.wikipedia.org/wiki/Reversi) (AKA Othello). You should be able to play against a computer using various Minimax strategies. You should be able to run two instances of the program and make them play against each other.
+- **Subdirectory:** `game-theory`
+- **Covered algorithms:**
+  - [Minimax](https://en.wikipedia.org/wiki/Minimax)
+  - [Alpha-Beta Pruning](https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning)
+  - [Flood Fill](https://en.wikipedia.org/wiki/Flood_fill) ([Dumb7Fill](https://www.chessprogramming.org/Dumb7Fill))
+  - [Genetic Algorithms](https://en.wikipedia.org/wiki/Genetic_algorithm)
+  - [Monte Carlo Method](https://en.wikipedia.org/wiki/Monte_Carlo_method)
+  - [Bidirectional Search](https://en.wikipedia.org/wiki/Bidirectional_search)
+- **Key features:**
+  - Fully rulebook compliant and blazingly fast Reversi logic implementation extended to support different game variants.
+    - Based on optimized [sliding piece attack](https://www.chessprogramming.org/Sliding_Piece_Attacks) chess algorithms.
+    - Memory efficient [bitboard](https://www.chessprogramming.org/Bitboards) game state representation.
+    - Custom move generation algorithm, which is over 25 times faster than naive implementation.
+    - Invalid game states made unrepresentable.
+    - Game state reachability checks based on piece stability inspired by [Rosenbloom 1982](https://stacks.stanford.edu/file/druid:wk764yw7162/wk764yw7162.pdf).
+  - Player AI using the Minimax algorithm optimized with alpha-beta pruning.
+    - Almost 20 available heuristics, including well known trained basic heuristic combinations.
+    - Five heuristics trained using genetic algorithms, monte carlo methods and the [Elo rating system](https://en.wikipedia.org/wiki/Elo_rating_system).
+    - Other, naive strategies also available.
+  - Colored game board view based on [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
+  - Over 2.5k lines of Rust source code.
+  - Logic covered with over 80 tests.
+    - Unit tests covering basic game logic.
+    - End-to-end tests checking the implementation against real world tournament games.
+    - [Property testing](https://en.wikipedia.org/wiki/Software_testing#Property_testing) of complicated game logic invariants.
+
+### Notes
+The course included a fifth assignment covering **neural networks**, however this exercise was done during the lab and is too insignificant to include here. The goal was to train a [multilayer perceptron](https://en.wikipedia.org/wiki/Multilayer_perceptron) to rate jokes from the [Jester dataset](https://eigentaste.berkeley.edu/dataset/) using [BERT](https://en.wikipedia.org/wiki/BERT_(language_model)) word embeddings.
