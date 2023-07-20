@@ -66,6 +66,10 @@
   - A total of 1.5k lines of Rust source code.
   - Covered by around 20 unit tests checking all of the core app logic.
 
+<p align="center">
+  <img src="./docs/ex1.jpg" width="50%" />
+</p>
+
 ### LAB2: Adversarial search and games
 
 - **Assignment:** Create a terminal implementation of the game of [Reversi](https://en.wikipedia.org/wiki/Reversi) (AKA Othello). You should be able to play against a computer using various Minimax strategies. You should be able to run two instances of the program and make them play against each other.
@@ -95,6 +99,16 @@
     - End-to-end tests checking the implementation against real world tournament games.
     - [Property testing](https://en.wikipedia.org/wiki/Software_testing#Property_testing) of complicated game logic invariants.
 
+<p align="center">
+  <img src="./docs/ex2-1.jpg" width="50%" />
+</p>
+<p align="center">
+  <img src="./docs/ex2-2.jpg" width="50%" />
+</p>
+<p align="center">
+  <img src="./docs/ex2-3.jpg" width="50%" />
+</p>
+
 ### LAB3: Logic programming
 
 - **Assignment:** Define an expert system for a selected household appliance. It should help a user troubleshoot problems regarding the device using defined rules.
@@ -106,6 +120,13 @@
 - **Key features:**
   - Accurate model of HP Photosmart 420 printer's user manual.
   - Text based interactive troubleshooter interface.
+
+<p align="center">
+  <img src="./docs/ex3-1.png" width="50%" />
+</p>
+<p align="center">
+  <img src="./docs/ex3-2.jpg" width="50%" />
+</p>
 
 ### LAB4: Machine learning
 
@@ -134,6 +155,19 @@
   - In-depth data exploration step.
   - Use of [stratified](https://en.wikipedia.org/wiki/Stratified_sampling) train-test split and [cross-validation](<https://en.wikipedia.org/wiki/Cross-validation_(statistics)>).
   - [Hyperparameter optimization](https://en.wikipedia.org/wiki/Hyperparameter_optimization) using [grid search](https://en.wikipedia.org/wiki/Hyperparameter_optimization#Grid_search).
+
+<p align="center">
+  <img src="./docs/ex4-1.png" width="50%" />
+</p>
+<p align="center">
+  <img src="./docs/ex4-2.png" width="50%" />
+</p>
+<p align="center">
+  <img src="./docs/ex4-3.png" width="50%" />
+</p>
+<p align="center">
+  <img src="./docs/ex4-4.png" width="50%" />
+</p>
 
 ### Notes
 
